@@ -1,18 +1,53 @@
 export class Service {
-    arguments: string[]
-    class: String
-    tags: {};
+    arguments: Array<Argument>;
+    id: string
+    class: string
+    tags: {}
+    isAbstract: boolean
 
-    constructor(service: Object) {
-        this.class = service.class;
-        this.arguments = service.arguments;
+    constructor(id: string, className: string) {
+        this.id = id;
+        this.class = className;
+        this.isAbstract = false;
     }
-    getParameters() {
-        let parameters = [];
-        this.arguments.forEach(element => {
-            if (element.match('%')) {
-                parameters.push(element);
-            }
-        });
+    addArgument(key: number, argument: Argument) {
+        this.arguments[key] = argument;
     }
+    addArguments(args: Array<Argument>) {
+        this.arguments = args;
+    }
+    abstract() {
+        this.isAbstract = true;
+    }
+}
+
+export class ServiceArgument implements Argument {
+    value: String
+    constructor(value: String) {
+        this.value = value;
+    }
+}
+
+export class TextArgument implements Argument {
+    value: String
+    constructor(value: String) {
+        this.value = value;
+    }
+}
+
+export class ParameterArgument implements Argument {
+    value: String
+    constructor(value: String) {
+        this.value = value;
+    }
+}
+
+export class CollectionArgument implements Argument {
+    value: Array<Argument>
+    constructor(value: Array<Argument>) {
+        this.value = value;
+    }
+}
+
+export interface Argument {
 }

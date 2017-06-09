@@ -6,7 +6,7 @@
 'use strict';
 
 import vscode = require('vscode');
-import { Services } from './services/services';
+import { Services } from '../services/services';
 import { dirname, basename } from 'path';
 
 export class CompletionPHPItemProvider implements vscode.CompletionItemProvider {

@@ -7,24 +7,9 @@
 
 import vscode = require('vscode');
 import { dirname, basename } from 'path';
-import { Services } from './services/services';
+import { Services } from '../services/services';
 import * as completion from './completion';
 
-function vscodeKindFromGoCodeClass(kind: string): vscode.CompletionItemKind {
-	switch (kind) {
-		case 'const':
-		case 'package':
-		case 'type':
-			return vscode.CompletionItemKind.Keyword;
-		case 'func':
-			return vscode.CompletionItemKind.Function;
-		case 'var':
-			return vscode.CompletionItemKind.Field;
-		case 'import':
-			return vscode.CompletionItemKind.Module;
-	}
-	return vscode.CompletionItemKind.Property; // TODO@EG additional mappings needed?
-}
 
 export class CompletionYamlItemProvider implements vscode.CompletionItemProvider {
 	services: Services;
@@ -38,18 +23,21 @@ export class CompletionYamlItemProvider implements vscode.CompletionItemProvider
 		if (!wordAtPosition) {
 			return Promise.resolve([]);
 		}
-		let currentWord = document.getText(new vscode.Range(document.positionAt(document.offsetAt(wordAtPosition.start)-1), wordAtPosition.end);
+		let currentWord = document.getText(new vscode.Range(document.positionAt(document.offsetAt(wordAtPosition.start)-1), wordAtPosition.end));
 		if (lineText.match(/^(\s)*(class:)(\s)+/)) {
 			return completion.classCodeCompletion(this.services, currentWord);
+		}
+		if (lineText.match(/^(\s)*(parent:)(\s)+/)) {
+			return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
 		}
 		let prevLineNumber = 1;
 		while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
 			if (lineText.match(/^(\s)*(arguments:)*(\s)+/)) {
 				if (currentWord.includes('@')) {
-					return completion.serviceArgumentCompletion(this.services, currentWord);
+					return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
 				}
 				if (currentWord.includes('%')) {
-					return completion.parameterArgumentCompletion(this.services, currentWord);
+					return completion.parameterArgumentCompletion(this.services, currentWord.substring(1));
 				}
 				return Promise.resolve([]);
 			}

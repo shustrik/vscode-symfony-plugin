@@ -1,17 +1,27 @@
 import { Service } from './service';
 
 export class Services {
-    services: Service[];
-    parameters: {};
+    services: ServicesHash;
+    parameters: ParametersHash;
     constructor() {
-        this.services = [];
-        this.parameters = [];   
+        this.services = {};
+        this.parameters = {};
     }
-    addService(key, service) {
-        this.services[key] = new Service(service)
+    addService(key, service: Service) {
+        this.services[key] = service;
+    }
+    addServices(services: Array<Service>) {
+        services.forEach(service => {
+            this.services[service.id] = service;
+        })
     }
     addParameter(key, value) {
         this.parameters[key] = value;
+    }
+    addParameters(parameters: {}) {
+        Object.keys(parameters).forEach(key => {
+            this.parameters[key] = parameters[key];
+        })
     }
     getServicesIds(): Array<string> {
         return Object.keys(this.services);
@@ -19,4 +29,12 @@ export class Services {
     getParameters(): Array<string> {
         return Object.keys(this.parameters);
     }
+}
+
+interface ServicesHash {
+    [id: string]: Service
+}
+
+interface ParametersHash {
+    [id: string]: string
 }

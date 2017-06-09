@@ -2,10 +2,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import {
-    LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions,
-    TransportKind, TextDocumentItem
-} from 'vscode-languageclient';
 import { Position } from 'vscode-languageserver-types';
 import {
     Token, TokenType, Phrase, PhraseType, Parser,
@@ -13,22 +9,19 @@ import {
     NamespaceUseDeclaration, NamespaceUseGroupClause, MethodDeclarationHeader,
     ClassBaseClause, InterfaceBaseClause, ClassInterfaceClause
 } from 'php7parser';
-import { CompletionYamlItemProvider } from './completionYaml';
-import { CompletionPHPItemProvider } from './completion_php';
-import { ParsedDocument } from './php/parsedDocument';
-import { ProjectVariables } from './php/variables';
+import { CompletionYamlItemProvider } from './completion/completionYaml';
+import { CompletionXMLItemProvider } from './completion/completionXML';
+import { CompletionPHPItemProvider } from './completion/completion_php';
 import { Services } from './services/services';
 import * as fs from 'fs';
 import * as xml from 'xml-js';
 import * as yml from 'yaml-js';
-import { Intelephense } from 'intelephense'
+import * as xml_parser from './services/parse/xmlParser';
+import * as yaml_parser from './services/parse/yamlParser';
 
 let maxFileSizeBytes = 10000000;
 let discoverMaxOpenFiles = 10;
-let languageClient: LanguageClient;
 let services: Services;
-let documents: ParsedDocument[];
-let variables: ProjectVariables;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -36,13 +29,6 @@ export function activate(context: vscode.ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     services = new Services();
-    variables = new ProjectVariables();
-    documents = [];
-    Intelephense.initialise();
-    let fsWatcherYaml = vscode.workspace.createFileSystemWatcher('**/*.yaml');
-    fsWatcherYaml.onDidDelete(onDidDelete);
-    fsWatcherYaml.onDidCreate(onDidCreate);
-    fsWatcherYaml.onDidChange(onDidChange);
     readFiles(['*.yaml', '*.yml'], (uriArray: vscode.Uri[]) => {
         onWorkspaceFindFiles(uriArray, parseYaml)
     });
@@ -55,7 +41,12 @@ export function activate(context: vscode.ExtensionContext) {
             wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g
         }));
 
+    context.subscriptions.push(
+        vscode.languages.setLanguageConfiguration('xml', {
+            wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g
+        }));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'yaml', scheme: 'file' }], new CompletionYamlItemProvider(services), '.', '\"'));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'xml', scheme: 'file' }], new CompletionXMLItemProvider(services), '.', '\"'));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'php', scheme: 'file' }], new CompletionPHPItemProvider(), '.', '\"'));
 }
 
@@ -82,7 +73,6 @@ function onDidCreate(uri: vscode.Uri) {
 }
 
 function onWorkspaceFindFiles(uriArray: vscode.Uri[], callable) {
-
     let fileCount = uriArray.length;
     let remaining = fileCount;
     let discoveredFileCount = 0;
@@ -161,28 +151,20 @@ function proccessFile(
 function parseYaml(uri: vscode.Uri) {
     let parsed = yml.load(fs.readFileSync(uri.fsPath, 'utf8'));
     if (parsed.services && parsed.services instanceof Object) {
-        for (let value of Object.keys(parsed.services)) {
-            services.addService(value, parsed.services[value]);
-        }
+        services.addServices(yaml_parser.parseServices(parsed.services));
     }
     if (parsed.parameters && parsed.parameters instanceof Object) {
-        for (let value of Object.keys(parsed.parameters)) {
-            services.addParameter(value, parsed.parameters[value]);
-        }
+        services.addServices(yaml_parser.parseParameters(parsed.parameters));
     }
-
 }
 function parseXml(uri: vscode.Uri) {
     let parsed = xml.xml2js(fs.readFileSync(uri.fsPath, 'utf8'), { compact: true });
-    console.log(parsed);
-    if (parsed.services && parsed.services instanceof Object) {
-        for (let value of Object.keys(parsed.services)) {
-            services.addService(value, parsed.services[value]);
+    if (parsed.container && parsed.container instanceof Object) {
+        if (parsed.container.services) {
+            services.addServices(xml_parser.parseServices(parsed.container.services));
         }
-    }
-    if (parsed.parameters && parsed.parameters instanceof Object) {
-        for (let value of Object.keys(parsed.parameters)) {
-            services.addParameter(value, parsed.parameters[value]);
+        if (parsed.container.parameters) {
+            services.addParameters(xml_parser.parseParameters(parsed.container.parameters));
         }
     }
 };
