@@ -1,5 +1,17 @@
-import { Service, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
-export function parseServices(services) {
+import { Services, Service, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
+import * as xml from 'xml-js';
+export function parse(body, services: Services) {
+    let parsed = xml.xml2js(body, { compact: true });
+    if (parsed.container && parsed.container instanceof Object) {
+        if (parsed.container.services) {
+            services.addServices(parseServices(parsed.container.services));
+        }
+        if (parsed.container.parameters) {
+            services.addParameters(parseParameters(parsed.container.parameters));
+        }
+    }
+}
+function parseServices(services) {
     let parsedServices = [];
     services.service.forEach(service => {
         let attributes = service['_attributes'];
@@ -9,7 +21,7 @@ export function parseServices(services) {
     });
     return parsedServices;
 }
-export function parseParameters(parameters) {
+function parseParameters(parameters) {
     let parsedParameters = {};
     parameters.parameter.forEach(parameter => {
         let attributes = parameter['_attributes'];

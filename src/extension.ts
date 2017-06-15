@@ -2,7 +2,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { Position } from 'vscode-languageserver-types';
 import {
     Token, TokenType, Phrase, PhraseType, Parser,
     NamespaceName, ScopedExpression, ObjectAccessExpression,
@@ -11,30 +10,35 @@ import {
 } from 'php7parser';
 import { CompletionYamlItemProvider } from './completion/completionYaml';
 import { CompletionXMLItemProvider } from './completion/completionXML';
-import { CompletionPHPItemProvider } from './completion/completion_php';
-import { Services } from './services/services';
+import { CompletionPHPItemProvider } from './completion/completionPhp';
+import { Services } from './services/service';
 import * as fs from 'fs';
-import * as xml from 'xml-js';
-import * as yml from 'yaml-js';
+import * as php_parser from './php/parser';
 import * as xml_parser from './services/parse/xmlParser';
 import * as yaml_parser from './services/parse/yamlParser';
+import { ClassStorage } from './php/parser'
 
 let maxFileSizeBytes = 10000000;
 let discoverMaxOpenFiles = 10;
 let services: Services;
-
+let classStorage: ClassStorage;
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     services = new Services();
-    readFiles(['*.yaml', '*.yml'], (uriArray: vscode.Uri[]) => {
-        onWorkspaceFindFiles(uriArray, parseYaml)
-    });
+    classStorage = new ClassStorage();
+    // readFiles(['*.yaml', '*.yml'], (uriArray: vscode.Uri[]) => {
+    //     onWorkspaceFindFiles(uriArray, parseYaml)
+    // });
 
-    readFiles(['*.xml'], (uriArray: vscode.Uri[]) => {
-        onWorkspaceFindFiles(uriArray, parseXml)
+    // readFiles(['*.xml'], (uriArray: vscode.Uri[]) => {
+    //     onWorkspaceFindFiles(uriArray, parseXml)
+    // });
+
+    readFiles(['*.php'], (uriArray: vscode.Uri[]) => {
+        onWorkspaceFindFiles(uriArray, parsePhp)
     });
     context.subscriptions.push(
         vscode.languages.setLanguageConfiguration('yaml', {
@@ -45,9 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.setLanguageConfiguration('xml', {
             wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g
         }));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'yaml', scheme: 'file' }], new CompletionYamlItemProvider(services), '.', '\"'));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'xml', scheme: 'file' }], new CompletionXMLItemProvider(services), '.', '\"'));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'php', scheme: 'file' }], new CompletionPHPItemProvider(), '.', '\"'));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'yaml', scheme: 'file' }], new CompletionYamlItemProvider(services, classStorage), '.', '\"'));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'xml', scheme: 'file' }], new CompletionXMLItemProvider(services,classStorage), '.', '\"'));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider([{ language: 'php', scheme: 'file' }], new CompletionPHPItemProvider(services, classStorage), '.', '\"'));
 }
 
 
@@ -80,7 +84,9 @@ function onWorkspaceFindFiles(uriArray: vscode.Uri[], callable) {
     let nActive = 0;
 
     uriArray = uriArray.reverse();
-
+    if (nActive > 100) {
+        return;
+    }
     let batchDiscover = () => {
         let uri: vscode.Uri;
         while (nActive < discoverMaxOpenFiles && (uri = uriArray.pop())) {
@@ -149,24 +155,13 @@ function proccessFile(
 
 }
 function parseYaml(uri: vscode.Uri) {
-    let parsed = yml.load(fs.readFileSync(uri.fsPath, 'utf8'));
-    if (parsed.services && parsed.services instanceof Object) {
-        services.addServices(yaml_parser.parseServices(parsed.services));
-    }
-    if (parsed.parameters && parsed.parameters instanceof Object) {
-        services.addServices(yaml_parser.parseParameters(parsed.parameters));
-    }
+    yaml_parser.parse(fs.readFileSync(uri.fsPath, 'utf8'), services);
 }
 function parseXml(uri: vscode.Uri) {
-    let parsed = xml.xml2js(fs.readFileSync(uri.fsPath, 'utf8'), { compact: true });
-    if (parsed.container && parsed.container instanceof Object) {
-        if (parsed.container.services) {
-            services.addServices(xml_parser.parseServices(parsed.container.services));
-        }
-        if (parsed.container.parameters) {
-            services.addParameters(xml_parser.parseParameters(parsed.container.parameters));
-        }
-    }
+    xml_parser.parse(fs.readFileSync(uri.fsPath, 'utf8'), services);
+};
+function parsePhp(uri: vscode.Uri) {
+    var classInfo = php_parser.parse(fs.readFileSync(uri.fsPath, 'utf8'), uri.fsPath, classStorage);
 };
 
 

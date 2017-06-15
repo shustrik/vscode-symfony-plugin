@@ -1,6 +1,15 @@
-
-import { Service, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
-export function parseServices(services) {
+import { Services, Service, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
+import * as yml from 'yaml-js';
+export function parse(body, services: Services){
+    let parsed = yml.load(body);
+    if (parsed.services && parsed.services instanceof Object) {
+        services.addServices(parseServices(parsed.services));
+    }
+    if (parsed.parameters && parsed.parameters instanceof Object) {
+        services.addServices(parseParameters(parsed.parameters));
+    }
+}
+ function parseServices(services) {
     let parsedServices = [];
     for (var key of Object.keys(services)) {
         let service = services[key];

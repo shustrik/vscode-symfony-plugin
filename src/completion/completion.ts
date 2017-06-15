@@ -1,7 +1,8 @@
 import { Services } from '../services/services';
+import { ClassStorage } from '../php/parser';
 import * as vscode from 'vscode';
 
-export function classCodeCompletion(services: Services, currentWorld: String): Thenable<vscode.CompletionItem[]> {
+export function classCodeCompletion(services: Services, clssStorage: ClassStorage, currentWorld: String): Thenable<vscode.CompletionItem[]> {
     return new Promise<vscode.CompletionItem[]>((resolve, reject) => { resolve([]) });
 }
 

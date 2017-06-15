@@ -9,12 +9,15 @@ import vscode = require('vscode');
 import { dirname, basename } from 'path';
 import { Services } from '../services/services';
 import * as completion from './completion';
+import { ClassStorage } from '../php/parser';
 
 
 export class CompletionYamlItemProvider implements vscode.CompletionItemProvider {
 	services: Services;
-	constructor(services: Services) {
+	classStorage: ClassStorage
+	constructor(services: Services, classStorage: ClassStorage) {
 		this.services = services;
+		this.classStorage = classStorage;
 	}
 
 	public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Thenable<vscode.CompletionItem[]> {
@@ -23,9 +26,9 @@ export class CompletionYamlItemProvider implements vscode.CompletionItemProvider
 		if (!wordAtPosition) {
 			return Promise.resolve([]);
 		}
-		let currentWord = document.getText(new vscode.Range(document.positionAt(document.offsetAt(wordAtPosition.start)-1), wordAtPosition.end));
+		let currentWord = document.getText(new vscode.Range(document.positionAt(document.offsetAt(wordAtPosition.start) - 1), wordAtPosition.end));
 		if (lineText.match(/^(\s)*(class:)(\s)+/)) {
-			return completion.classCodeCompletion(this.services, currentWord);
+			return completion.classCodeCompletion(this.services, this.classStorage, currentWord);
 		}
 		if (lineText.match(/^(\s)*(parent:)(\s)+/)) {
 			return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
