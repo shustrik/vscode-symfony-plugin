@@ -58,15 +58,15 @@ export function activate(context: ExtensionContext) {
 	if (workspace.rootPath) {
 		ready.then(() => {
 			readFiles(['*.yaml', '*.yml'], (uriArray: vscode.Uri[]) => {
-				onWorkspaceFindFiles(uriArray, parseFile)
+				onWorkspaceFindFiles(uriArray, parseFile, 'yaml')
 			});
 
 			readFiles(['*.xml'], (uriArray: vscode.Uri[]) => {
-				onWorkspaceFindFiles(uriArray, parseFile)
+				onWorkspaceFindFiles(uriArray, parseFile, 'xml')
 			});
 
 			readFiles(['*.php'], (uriArray: vscode.Uri[]) => {
-				onWorkspaceFindFiles(uriArray, parseFile)
+				onWorkspaceFindFiles(uriArray, parseFile, 'php')
 			});
 		});
 	}
@@ -93,7 +93,8 @@ function readFiles(associations: Array<string>, callback) {
 	}
 }
 
-function onWorkspaceFindFiles(uriArray: vscode.Uri[], callable) {
+function onWorkspaceFindFiles(uriArray: vscode.Uri[], callable, type: string) {
+	languageClient.info('Parse files start: ' + type);
 	let fileCount = uriArray.length;
 	let remaining = fileCount;
 	let discoveredFileCount = 0;
@@ -120,9 +121,9 @@ function onWorkspaceFindFiles(uriArray: vscode.Uri[], callable) {
 			return;
 		}
 		let elapsed = process.hrtime(start);
-		console.info(
+		languageClient.info(
 			[
-				'Workspace symbol discovery ended',
+				'Workspace files discovery ended: ' + type,
 				`${discoveredFileCount}/${fileCount} files`,
 				`${elapsed[0]}.${Math.round(elapsed[1] / 1000000)} seconds`
 			].join(' | ')

@@ -82,7 +82,7 @@ function findService(classStorage: ClassStorage, classDeclaration: ClassDeclarat
 }
 function isServiceConditions(classStorage: ClassStorage, classDeclaration: ClassDeclaration, position: Position, currentWord, node, parent) {
     if (node.kind == 'new' &&
-        classDeclaration.classIsConteinerCompletion(node.what.name) &&
+        conteinerCompletionType(classDeclaration.getFQNFromName(node.what.name)) &&
         node.arguments.length > 0) {
         let arg = node.arguments[0];
         if (arg.value == currentWord) {
@@ -183,6 +183,15 @@ function walkAST(callback: Function, node, parent?) {
                 return result;
             }
         }
+    }
+    return false;
+}
+function conteinerCompletionType(type) {
+    if (type == services.containerCompleteClass.container ||
+        type == services.containerCompleteClass.reference ||
+        type == services.containerCompleteClass.controllerContainer ||
+        type == services.containerCompleteClass.decorator) {
+        return true;
     }
     return false;
 }

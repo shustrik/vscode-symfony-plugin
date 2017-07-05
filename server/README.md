@@ -13,11 +13,13 @@ If vendor folder excluded - symfony services not provide
 ## Extension Settings
 
 ## Known Issues
+* How it works with use alias
 * Parse php service configuration file
 * Tag completion
 * Split public and private services
 * Form completion helper
 * Symfony 3.3 autoconfigure 
+* Tests
 
 
 ## Release Notes
