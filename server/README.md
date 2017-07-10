@@ -13,13 +13,16 @@ If vendor folder excluded - symfony services not provide
 ## Extension Settings
 
 ## Known Issues
-* How it works with use alias
-* Parse php service configuration file
+* Go to service definition
 * Tag completion
+* Parse php service configuration file
 * Split public and private services
 * Form completion helper
 * Symfony 3.3 autoconfigure 
 * Tests
 
+Request textDocument/completion failed.
+  Message: Request textDocument/completion failed with message: Illegal value for `line`
+  Code: -32603 
 
 ## Release Notes

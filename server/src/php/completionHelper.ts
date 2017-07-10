@@ -1,11 +1,12 @@
-import { ClassStorage, parseEval, ClassDeclaration } from '../php/parser';
+import { ClassStorage, ClassDeclaration } from '../php/phpStructure';
+import { parseEval } from '../php/parser';
 import * as services from '../services/service'
 import { Position, CompletionItem, CompletionItemKind } from 'vscode-languageserver';
 import { Services } from '../services/service';
 
 export function isService(classStorage: ClassStorage, fileName: string, text: string, position: Position, currentWord: string) {
     let ast = parseEval(text);
-    let classDeclaration = classStorage.getFileClass(fileName);
+    let classDeclaration = classStorage.getClassInFile(fileName);
     if (!ast.children || !classDeclaration) {
         return false;
     }
@@ -16,7 +17,7 @@ export function isService(classStorage: ClassStorage, fileName: string, text: st
 }
 export function isParameter(classStorage: ClassStorage, fileName: string, text: string, position: Position, currentWord: string) {
     let ast = parseEval(text);
-    let classDeclaration = classStorage.getFileClass(fileName);
+    let classDeclaration = classStorage.getClassInFile(fileName);
     if (!ast.children || !classDeclaration) {
         return false;
     }
@@ -28,7 +29,7 @@ export function isParameter(classStorage: ClassStorage, fileName: string, text: 
 }
 export function getServiceMethods(classStorage: ClassStorage, fileName: string, text: string, services: Services, currentWord: string): CompletionItem[] {
     let ast = parseEval(text);
-    let classDeclaration = classStorage.getFileClass(fileName);
+    let classDeclaration = classStorage.getClassInFile(fileName);
     let result = walkAST(function (node, parent) {
         let service = findService(classStorage, classDeclaration, currentWord, node, parent);
         if (!service) {
@@ -42,7 +43,7 @@ export function getServiceMethods(classStorage: ClassStorage, fileName: string, 
     return result;
 }
 function getClassServiceMethods(services: Services, classStorage: ClassStorage, service: string, currentWord: string) {
-    let className = services.getClassService(service);
+    let className = services.getServiceClass(service);
     let classDeclaration = classStorage.getClassByName(className);
     if (!classDeclaration) {
         return [];
@@ -152,6 +153,9 @@ function isParameterConditions(classStorage: ClassStorage, classDeclaration: Cla
     return false;
 }
 function walkAST(callback: Function, node, parent?) {
+    if (!node) {
+        return false;
+    }
     if (node.kind == 'assign') {
         return walkAST(callback, node.right, node);
     }

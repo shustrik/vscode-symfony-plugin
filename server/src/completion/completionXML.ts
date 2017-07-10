@@ -9,7 +9,7 @@ import { CompletionItem, Position, TextDocument } from 'vscode-languageserver';
 import { dirname, basename } from 'path';
 import { Services } from '../services/service';
 import * as completion from './completion';
-import { ClassStorage } from '../php/parser';
+import { ClassStorage } from '../php/phpStructure';
 import { ExtensionTextDocument } from '../documents';
 
 export class CompletionXMLItemProvider {

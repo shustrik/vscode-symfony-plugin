@@ -19,11 +19,7 @@
     "activationEvents": [
         "onLanguage:php",
         "onLanguage:yaml",
-        "onLanguage:xml",
-        "workspaceContains:**/*.php",
-        "workspaceContains:**/*.yml",
-        "workspaceContains:**/*.yaml",
-        "workspaceContains:**/*.xml"
+        "onLanguage:xml"
     ],
     "keywords": [
         "php",

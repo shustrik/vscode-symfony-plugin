@@ -4,21 +4,22 @@
 import {
 	IPCMessageReader, IPCMessageWriter,
 	createConnection, IConnection, TextDocumentSyncKind,
-	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
+	TextDocuments, TextDocument, DidSaveTextDocumentParams,
 	InitializeParams, InitializeResult, TextDocumentIdentifier, TextDocumentPositionParams,
 	CompletionItem, CompletionItemKind, RequestType, Position,
-	SignatureHelp, SignatureInformation, ParameterInformation
+	SignatureHelp, SignatureInformation, ParameterInformation, Definition, DidChangeWatchedFilesParams
 } from 'vscode-languageserver';
 import { CompletionYamlItemProvider } from './completion/completionYaml';
 import { CompletionXMLItemProvider } from './completion/completionXML';
 import { CompletionPHPItemProvider } from './completion/completionPhp';
+import { DefinitionProvider } from './definition';
 import { Services } from './services/service';
 import { DocumentStore, ExtensionTextDocument } from './documents';
 import * as fs from 'fs';
 import * as php_parser from './php/parser';
 import * as xml_parser from './services/parse/xmlParser';
 import * as yaml_parser from './services/parse/yamlParser';
-import { ClassStorage } from './php/parser'
+import { ClassStorage } from './php/phpStructure'
 
 let maxFileSizeBytes = 10000000;
 let discoverMaxOpenFiles = 100;
@@ -28,6 +29,7 @@ let documentStore: DocumentStore;
 let completionPhp: CompletionPHPItemProvider;
 let completionYaml: CompletionYamlItemProvider;
 let completionXml: CompletionXMLItemProvider;
+let definition: DefinitionProvider;
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 const parseFile = new RequestType<{ text: string, path: string }, void, void, void>('parseFile');
 const deleteFile = new RequestType<{ text: string, path: string }, void, void, void>('deleteFile');
@@ -41,11 +43,12 @@ connection.onInitialize((params): InitializeResult => {
 	completionPhp = new CompletionPHPItemProvider(services, classStorage);
 	completionXml = new CompletionXMLItemProvider(services, classStorage);
 	completionYaml = new CompletionYamlItemProvider(services, classStorage);
+	definition = new DefinitionProvider(services, classStorage);
 	return {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
-			documentSymbolProvider: true,
 			workspaceSymbolProvider: true,
+			definitionProvider: true,
 			completionProvider: {
 				triggerCharacters: ['$', '>', ':', '\'']
 			}
@@ -92,6 +95,14 @@ connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): Comp
 
 connection.onWorkspaceSymbol((params) => {
 	return [];
+});
+
+connection.onDefinition((textDocumentPosition: TextDocumentPositionParams): Definition => {
+	let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+	let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+	let result = definition.provideDefinition(documentStore.get(fileName), textDocumentPosition.position);
+
+	return result;
 });
 
 function parseRequestFile(path: string, body: string) {

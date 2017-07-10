@@ -9,7 +9,7 @@ import { CompletionItem, TextDocument, Position, Range } from 'vscode-languagese
 import { dirname, basename } from 'path';
 import { Services } from '../services/service';
 import * as completion from './completion';
-import { ClassStorage } from '../php/parser';
+import { ClassStorage } from '../php/phpStructure';
 import { ExtensionTextDocument } from '../documents';
 
 
@@ -34,8 +34,12 @@ export class CompletionYamlItemProvider {
 		if (lineText.match(/^(\s)*(parent:)(\s)+/)) {
 			return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
 		}
+		if (lineText.match(/^(\s)*(tags:)(\s)+/)) {
+			return completion.tagsCompletion(this.services, currentWord);
+		}
 		let prevLineNumber = 1;
 		while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
+			//проблемная регулярка
 			if (lineText.match(/^(\s)*(arguments:)*(\s)+/)) {
 				if (currentWord.includes('@')) {
 					return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
@@ -45,18 +49,12 @@ export class CompletionYamlItemProvider {
 				}
 				return [];
 			}
-			lineText = document.lineAt(Position.create(position.line - prevLineNumber, 0));
-			prevLineNumber++;
-		}
-
-		while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
-			if (lineText.match(/^(\s)*(tags:)(\s)+/)) {
+			if (lineText.match(/^(\s)*(tags:)*(\s)+/)) {
 				return completion.tagsCompletion(this.services, currentWord);
 			}
 			lineText = document.lineAt(Position.create(position.line - prevLineNumber, 0));
 			prevLineNumber++;
 		}
-
 		return [];
 	}
 }

@@ -68,10 +68,22 @@ export class Services {
     getServicesIds(): Array<string> {
         return Object.keys(this.services);
     }
+    getTags(): Array<string> {
+        let result = new Array();
+        Object.keys(this.services).forEach(key => {
+            console.log('sfd');
+            Object.keys(this.services[key].getTags()).forEach(key => {
+                if (!result.includes(key)) {
+                    result.push(key);
+                }
+            });
+        });
+        return result;
+    }
     getParameters(): Array<string> {
         return Object.keys(this.parameters);
     }
-    getClassService(id: string) {
+    getServiceClass(id: string) {
         let service = this.services[id];
         return service ? service.class : null;
     }
@@ -87,23 +99,49 @@ interface ParametersHash {
 interface PathDepsHash {
     [id: string]: Array<string>
 }
+
+interface TagHash {
+    [id: string]: Tag
+}
+export class Tag {
+    name: string
+    attributes: ParametersHash
+    constructor(name: string) {
+        this.name = name;
+        this.attributes = {};
+    }
+    addAttribute(key, value) {
+        this.attributes[key] = value;
+    }
+}
+
 export class Service {
     arguments: Array<Argument>;
     id: string
     class: string
-    tags: {}
+    tags: TagHash
     isAbstract: boolean
 
     constructor(id: string, className: string) {
         this.id = id;
         this.class = className;
         this.isAbstract = false;
+        this.arguments = new Array();
+        this.tags = {};
     }
     addArgument(key: number, argument: Argument) {
         this.arguments[key] = argument;
     }
     addArguments(args: Array<Argument>) {
         this.arguments = args;
+    }
+    addTags(tags) {
+        Object.keys(tags).forEach(tag => {
+            this.tags[tags[tag]['name']] = tags[tag]
+        });
+    }
+    getTags() {
+        return this.tags;
     }
     abstract() {
         this.isAbstract = true;

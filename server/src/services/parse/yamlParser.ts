@@ -1,4 +1,4 @@
-import { Services, Service, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
+import { Services, Service, Tag, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
 import * as yml from 'yaml-js';
 export function parse(body: string, path: string, services: Services) {
     try {
@@ -10,6 +10,7 @@ export function parse(body: string, path: string, services: Services) {
             services.addParameters(parseParameters(parsed.parameters), path);
         }
     } catch (e) {
+        console.log(e);
         console.log('error parse yaml:' + path);
     }
 }
@@ -21,10 +22,25 @@ function parseServices(services) {
             let className = service['class'] ? service['class'] : key;
             let parsedService = new Service(key, className);
             parsedService.addArguments(parseArguments(service['arguments']));
+            parsedService.addTags(parseTags(service['tags']));
             parsedServices.push(parsedService);
         }
     }
     return parsedServices;
+}
+function parseTags(tags: Array<{}>) {
+    let result = {};
+    if (!tags) {
+        return result;
+    }
+    tags.forEach(tag => {
+        result[tag['name']] = result[tag['name']] ? result[tag['name']] : new Tag(tag['name']);
+        Object.keys(tag).forEach(attribute => {
+            result[tag['name']].addAttribute(attribute, tag[attribute]);
+        });
+
+    });
+    return result;
 }
 function parseParameters(parameters) {
     return parameters;

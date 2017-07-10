@@ -1,4 +1,4 @@
-import { Services, Service, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
+import { Services, Service, Tag, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
 import * as xml from 'xml-js';
 export function parse(body: string, path: string, services: Services) {
     try {
@@ -12,8 +12,21 @@ export function parse(body: string, path: string, services: Services) {
             }
         }
     } catch (e) {
+        console.log(e);
         console.log('error parse xml:' + path);
     }
+}
+function parseTags(tag) {
+    if (tag && '_attributes' in tag) {
+        let attributes = tag['_attributes'];
+        let serviceTag = new Tag(attributes['name']);
+        let name = attributes['name'];
+        Object.keys(attributes).forEach(attribute => {
+            serviceTag.addAttribute(attribute, tag[attribute]);
+        });
+        return { name: serviceTag };
+    }
+    return {};
 }
 function parseServices(services) {
     let parsedServices = [];
@@ -22,6 +35,7 @@ function parseServices(services) {
         let className = attributes['class'] ? attributes['class'] : attributes['id'];
         let parsedService = new Service(attributes['id'], className);
         parsedService.addArguments(parseArguments(service['argument']));
+        parsedService.addTags(parseTags(service['tag']));
         parsedServices.push(parsedService);
     }
     if (!services.service.length && ("_attributes" in services.service)) {

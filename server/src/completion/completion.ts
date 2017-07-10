@@ -1,5 +1,5 @@
 import { Services } from '../services/service';
-import { ClassStorage } from '../php/parser';
+import { ClassStorage } from '../php/phpStructure';
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver';
 
 export function classCodeCompletion(services: Services, classStorage: ClassStorage, currentWord: string): CompletionItem[] {
@@ -42,6 +42,17 @@ export function serviceArgumentCompletion(services: Services, currentWord: strin
     });
     return suggest;
 }
-export function tagsCompletion(services: Services, currentWorld: String): CompletionItem[] {
-    return [];
+export function tagsCompletion(services: Services, currentWord: string): CompletionItem[] {
+    let suggest = [];
+    services.getTags().forEach(element => {
+        console.log(element);
+        if (element.match(currentWord)) {
+            let packageItem = CompletionItem.create(element);
+            packageItem.kind = CompletionItemKind.Keyword;
+            packageItem.insertText = element;
+            packageItem.label = element;
+            suggest.push(packageItem);
+        }
+    });
+    return suggest;
 }

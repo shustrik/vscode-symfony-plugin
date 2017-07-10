@@ -4,9 +4,7 @@
  *--------------------------------------------------------*/
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-const helper = require("../php/completionHelper");
-const completion = require("./completion");
-class CompletionPHPItemProvider {
+class DifinitionProvider {
     constructor(services, classStorage) {
         this.services = services;
         this.classStorage = classStorage;
@@ -14,20 +12,15 @@ class CompletionPHPItemProvider {
     provideCompletionItems(document, position) {
         let lineText = document.lineAt(position);
         let wordAtPosition = document.getWordRangeAtPosition(position);
-        console.log(lineText);
         if (!wordAtPosition) {
             return [];
         }
         let currentWord = document.getRangeText(wordAtPosition);
-        console.log(currentWord);
-        if (helper.isService(this.classStorage, document.uri, lineText, position, currentWord)) {
-            return completion.serviceArgumentCompletion(this.services, currentWord);
+        let service = this.services.getServiceClass(currentWord);
+        if (service) {
+            this.classStorage.getClassFileName(service);
         }
-        if (helper.isParameter(this.classStorage, document.uri, lineText, position, currentWord)) {
-            return completion.parameterArgumentCompletion(this.services, currentWord);
-        }
-        return helper.getServiceMethods(this.classStorage, document.uri, lineText, this.services, currentWord);
     }
 }
-exports.CompletionPHPItemProvider = CompletionPHPItemProvider;
-//# sourceMappingURL=completionPhp.js.map
+exports.DifinitionProvider = DifinitionProvider;
+//# sourceMappingURL=difinition.js.map

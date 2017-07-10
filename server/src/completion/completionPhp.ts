@@ -9,7 +9,7 @@
 import { CompletionItem, TextDocument, Position, Range } from 'vscode-languageserver';
 import { Services } from '../services/service';
 import { dirname, basename } from 'path';
-import { ClassStorage } from '../php/parser';
+import { ClassStorage } from '../php/phpStructure';
 import * as helper from '../php/completionHelper';
 import { ExtensionTextDocument } from '../documents';
 import * as completion from './completion';
@@ -25,10 +25,12 @@ export class CompletionPHPItemProvider {
 	public provideCompletionItems(document: ExtensionTextDocument, position: Position): CompletionItem[] {
 		let lineText = document.lineAt(position);
 		let wordAtPosition = document.getWordRangeAtPosition(position);
+		console.log(lineText);
 		if (!wordAtPosition) {
 			return [];
 		}
 		let currentWord = document.getRangeText(wordAtPosition);
+		console.log(currentWord);
 		if (helper.isService(this.classStorage, document.uri, lineText, position, currentWord)) {
 			return completion.serviceArgumentCompletion(this.services, currentWord);
 		}

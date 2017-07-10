@@ -15,10 +15,23 @@ function parse(body, path, services) {
         }
     }
     catch (e) {
+        console.log(e);
         console.log('error parse xml:' + path);
     }
 }
 exports.parse = parse;
+function parseTags(tag) {
+    if (tag && '_attributes' in tag) {
+        let attributes = tag['_attributes'];
+        let serviceTag = new service_1.Tag(attributes['name']);
+        let name = attributes['name'];
+        Object.keys(attributes).forEach(attribute => {
+            serviceTag.addAttribute(attribute, tag[attribute]);
+        });
+        return { name: serviceTag };
+    }
+    return {};
+}
 function parseServices(services) {
     let parsedServices = [];
     let pushService = function (service) {
@@ -26,6 +39,7 @@ function parseServices(services) {
         let className = attributes['class'] ? attributes['class'] : attributes['id'];
         let parsedService = new service_1.Service(attributes['id'], className);
         parsedService.addArguments(parseArguments(service['argument']));
+        parsedService.addTags(parseTags(service['tag']));
         parsedServices.push(parsedService);
     };
     if (!services.service.length && ("_attributes" in services.service)) {

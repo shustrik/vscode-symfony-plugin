@@ -24,8 +24,12 @@ class CompletionYamlItemProvider {
         if (lineText.match(/^(\s)*(parent:)(\s)+/)) {
             return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
         }
+        if (lineText.match(/^(\s)*(tags:)(\s)+/)) {
+            return completion.tagsCompletion(this.services, currentWord);
+        }
         let prevLineNumber = 1;
         while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
+            //проблемная регулярка
             if (lineText.match(/^(\s)*(arguments:)*(\s)+/)) {
                 if (currentWord.includes('@')) {
                     return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
@@ -35,11 +39,7 @@ class CompletionYamlItemProvider {
                 }
                 return [];
             }
-            lineText = document.lineAt(vscode_languageserver_1.Position.create(position.line - prevLineNumber, 0));
-            prevLineNumber++;
-        }
-        while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
-            if (lineText.match(/^(\s)*(tags:)(\s)+/)) {
+            if (lineText.match(/^(\s)*(tags:)*(\s)+/)) {
                 return completion.tagsCompletion(this.services, currentWord);
             }
             lineText = document.lineAt(vscode_languageserver_1.Position.create(position.line - prevLineNumber, 0));

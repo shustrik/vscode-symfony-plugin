@@ -6,12 +6,13 @@ const vscode_languageserver_1 = require("vscode-languageserver");
 const completionYaml_1 = require("./completion/completionYaml");
 const completionXML_1 = require("./completion/completionXML");
 const completionPhp_1 = require("./completion/completionPhp");
+const definition_1 = require("./definition");
 const service_1 = require("./services/service");
 const documents_1 = require("./documents");
 const php_parser = require("./php/parser");
 const xml_parser = require("./services/parse/xmlParser");
 const yaml_parser = require("./services/parse/yamlParser");
-const parser_1 = require("./php/parser");
+const phpStructure_1 = require("./php/phpStructure");
 let maxFileSizeBytes = 10000000;
 let discoverMaxOpenFiles = 100;
 let services;
@@ -20,6 +21,7 @@ let documentStore;
 let completionPhp;
 let completionYaml;
 let completionXml;
+let definition;
 let connection = vscode_languageserver_1.createConnection(new vscode_languageserver_1.IPCMessageReader(process), new vscode_languageserver_1.IPCMessageWriter(process));
 const parseFile = new vscode_languageserver_1.RequestType('parseFile');
 const deleteFile = new vscode_languageserver_1.RequestType('deleteFile');
@@ -28,16 +30,17 @@ const changeFile = new vscode_languageserver_1.RequestType('changeFile');
 // your extension is activated the very first time the command is executed
 connection.onInitialize((params) => {
     services = new service_1.Services();
-    classStorage = new parser_1.ClassStorage();
+    classStorage = new phpStructure_1.ClassStorage();
     documentStore = new documents_1.DocumentStore();
     completionPhp = new completionPhp_1.CompletionPHPItemProvider(services, classStorage);
     completionXml = new completionXML_1.CompletionXMLItemProvider(services, classStorage);
     completionYaml = new completionYaml_1.CompletionYamlItemProvider(services, classStorage);
+    definition = new definition_1.DefinitionProvider(services, classStorage);
     return {
         capabilities: {
             textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Incremental,
-            documentSymbolProvider: true,
             workspaceSymbolProvider: true,
+            definitionProvider: true,
             completionProvider: {
                 triggerCharacters: ['$', '>', ':', '\'']
             }
@@ -71,6 +74,12 @@ connection.onCompletion((textDocumentPosition) => {
 });
 connection.onWorkspaceSymbol((params) => {
     return [];
+});
+connection.onDefinition((textDocumentPosition) => {
+    let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+    let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+    let result = definition.provideDefinition(documentStore.get(fileName), textDocumentPosition.position);
+    return result;
 });
 function parseRequestFile(path, body) {
     let extension = path.split('.').pop();

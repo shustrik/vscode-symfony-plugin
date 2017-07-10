@@ -13,6 +13,7 @@ function parse(body, path, services) {
         }
     }
     catch (e) {
+        console.log(e);
         console.log('error parse yaml:' + path);
     }
 }
@@ -25,10 +26,24 @@ function parseServices(services) {
             let className = service['class'] ? service['class'] : key;
             let parsedService = new service_1.Service(key, className);
             parsedService.addArguments(parseArguments(service['arguments']));
+            parsedService.addTags(parseTags(service['tags']));
             parsedServices.push(parsedService);
         }
     }
     return parsedServices;
+}
+function parseTags(tags) {
+    let result = {};
+    if (!tags) {
+        return result;
+    }
+    tags.forEach(tag => {
+        result[tag['name']] = result[tag['name']] ? result[tag['name']] : new service_1.Tag(tag['name']);
+        Object.keys(tag).forEach(attribute => {
+            result[tag['name']].addAttribute(attribute, tag[attribute]);
+        });
+    });
+    return result;
 }
 function parseParameters(parameters) {
     return parameters;

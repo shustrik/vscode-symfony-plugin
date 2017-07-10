@@ -66,26 +66,58 @@ class Services {
     getServicesIds() {
         return Object.keys(this.services);
     }
+    getTags() {
+        let result = new Array();
+        Object.keys(this.services).forEach(key => {
+            console.log('sfd');
+            Object.keys(this.services[key].getTags()).forEach(key => {
+                if (!result.includes(key)) {
+                    result.push(key);
+                }
+            });
+        });
+        return result;
+    }
     getParameters() {
         return Object.keys(this.parameters);
     }
-    getClassService(id) {
+    getServiceClass(id) {
         let service = this.services[id];
         return service ? service.class : null;
     }
 }
 exports.Services = Services;
+class Tag {
+    constructor(name) {
+        this.name = name;
+        this.attributes = {};
+    }
+    addAttribute(key, value) {
+        this.attributes[key] = value;
+    }
+}
+exports.Tag = Tag;
 class Service {
     constructor(id, className) {
         this.id = id;
         this.class = className;
         this.isAbstract = false;
+        this.arguments = new Array();
+        this.tags = {};
     }
     addArgument(key, argument) {
         this.arguments[key] = argument;
     }
     addArguments(args) {
         this.arguments = args;
+    }
+    addTags(tags) {
+        Object.keys(tags).forEach(tag => {
+            this.tags[tags[tag]['name']] = tags[tag];
+        });
+    }
+    getTags() {
+        return this.tags;
     }
     abstract() {
         this.isAbstract = true;

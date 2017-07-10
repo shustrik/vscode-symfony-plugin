@@ -43,8 +43,19 @@ function serviceArgumentCompletion(services, currentWord) {
     return suggest;
 }
 exports.serviceArgumentCompletion = serviceArgumentCompletion;
-function tagsCompletion(services, currentWorld) {
-    return [];
+function tagsCompletion(services, currentWord) {
+    let suggest = [];
+    services.getTags().forEach(element => {
+        console.log(element);
+        if (element.match(currentWord)) {
+            let packageItem = vscode_languageserver_1.CompletionItem.create(element);
+            packageItem.kind = vscode_languageserver_1.CompletionItemKind.Keyword;
+            packageItem.insertText = element;
+            packageItem.label = element;
+            suggest.push(packageItem);
+        }
+    });
+    return suggest;
 }
 exports.tagsCompletion = tagsCompletion;
 //# sourceMappingURL=completion.js.map

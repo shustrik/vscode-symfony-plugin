@@ -5,7 +5,7 @@ const services = require("../services/service");
 const vscode_languageserver_1 = require("vscode-languageserver");
 function isService(classStorage, fileName, text, position, currentWord) {
     let ast = parser_1.parseEval(text);
-    let classDeclaration = classStorage.getFileClass(fileName);
+    let classDeclaration = classStorage.getClassInFile(fileName);
     if (!ast.children || !classDeclaration) {
         return false;
     }
@@ -17,7 +17,7 @@ function isService(classStorage, fileName, text, position, currentWord) {
 exports.isService = isService;
 function isParameter(classStorage, fileName, text, position, currentWord) {
     let ast = parser_1.parseEval(text);
-    let classDeclaration = classStorage.getFileClass(fileName);
+    let classDeclaration = classStorage.getClassInFile(fileName);
     if (!ast.children || !classDeclaration) {
         return false;
     }
@@ -29,7 +29,7 @@ function isParameter(classStorage, fileName, text, position, currentWord) {
 exports.isParameter = isParameter;
 function getServiceMethods(classStorage, fileName, text, services, currentWord) {
     let ast = parser_1.parseEval(text);
-    let classDeclaration = classStorage.getFileClass(fileName);
+    let classDeclaration = classStorage.getClassInFile(fileName);
     let result = walkAST(function (node, parent) {
         let service = findService(classStorage, classDeclaration, currentWord, node, parent);
         if (!service) {
@@ -44,7 +44,7 @@ function getServiceMethods(classStorage, fileName, text, services, currentWord) 
 }
 exports.getServiceMethods = getServiceMethods;
 function getClassServiceMethods(services, classStorage, service, currentWord) {
-    let className = services.getClassService(service);
+    let className = services.getServiceClass(service);
     let classDeclaration = classStorage.getClassByName(className);
     if (!classDeclaration) {
         return [];
@@ -150,6 +150,9 @@ function isParameterConditions(classStorage, classDeclaration, position, current
     return false;
 }
 function walkAST(callback, node, parent) {
+    if (!node) {
+        return false;
+    }
     if (node.kind == 'assign') {
         return walkAST(callback, node.right, node);
     }
