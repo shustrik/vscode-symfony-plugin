@@ -11,16 +11,16 @@ class CompletionXMLItemProvider {
         this.classStorage = classStorage;
     }
     provideCompletionItems(document, position) {
-        let lineText = document.lineAt(position);
+        let lineText = document.lineAt(position).trim();
         let wordAtPosition = document.getWordRangeAtPosition(position, /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g);
         if (!wordAtPosition) {
             return [];
         }
         let currentWord = document.getRangeText(wordAtPosition);
-        if (lineText.match(/^(\s)*(class|id)(\s)+/)) {
+        if (lineText.match(/^<(\s)*(class|id)(\s)+/)) {
             return completion.classCodeCompletion(this.services, this.classStorage, currentWord);
         }
-        if (lineText.match(/^(\s)*(argument)*(\s)+/)) {
+        if (lineText.match(/<(\s)*argument(\s)+/)) {
             if (lineText.includes('service')) {
                 return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
             }
@@ -29,7 +29,7 @@ class CompletionXMLItemProvider {
             }
             return [];
         }
-        if (lineText.match(/^(\s)*(tag)(\s)+/)) {
+        if (lineText.match(/^<(\s)*tag(\s)+/)) {
             return completion.tagsCompletion(this.services, currentWord);
         }
         return [];

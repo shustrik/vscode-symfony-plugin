@@ -46,8 +46,7 @@ exports.serviceArgumentCompletion = serviceArgumentCompletion;
 function tagsCompletion(services, currentWord) {
     let suggest = [];
     services.getTags().forEach(element => {
-        console.log(element);
-        if (element.match(currentWord)) {
+        if (element.match(currentWord.trim())) {
             let packageItem = vscode_languageserver_1.CompletionItem.create(element);
             packageItem.kind = vscode_languageserver_1.CompletionItemKind.Keyword;
             packageItem.insertText = element;

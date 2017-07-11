@@ -45,8 +45,7 @@ export function serviceArgumentCompletion(services: Services, currentWord: strin
 export function tagsCompletion(services: Services, currentWord: string): CompletionItem[] {
     let suggest = [];
     services.getTags().forEach(element => {
-        console.log(element);
-        if (element.match(currentWord)) {
+        if (element.match(currentWord.trim())) {
             let packageItem = CompletionItem.create(element);
             packageItem.kind = CompletionItemKind.Keyword;
             packageItem.insertText = element;

@@ -21,16 +21,16 @@ export class CompletionXMLItemProvider {
     }
 
     public provideCompletionItems(document: ExtensionTextDocument, position: Position): CompletionItem[] {
-        let lineText = document.lineAt(position);
-        let wordAtPosition = document.getWordRangeAtPosition(position,/(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g);
+        let lineText = document.lineAt(position).trim();
+        let wordAtPosition = document.getWordRangeAtPosition(position, /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g);
         if (!wordAtPosition) {
             return [];
         }
-		let currentWord = document.getRangeText(wordAtPosition);
-        if (lineText.match(/^(\s)*(class|id)(\s)+/)) {
+        let currentWord = document.getRangeText(wordAtPosition);
+        if (lineText.match(/^<(\s)*(class|id)(\s)+/)) {
             return completion.classCodeCompletion(this.services, this.classStorage, currentWord);
         }
-        if (lineText.match(/^(\s)*(argument)*(\s)+/)) {
+        if (lineText.match(/<(\s)*argument(\s)+/)) {
             if (lineText.includes('service')) {
                 return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
             }
@@ -39,7 +39,7 @@ export class CompletionXMLItemProvider {
             }
             return [];
         }
-        if (lineText.match(/^(\s)*(tag)(\s)+/)) {
+        if (lineText.match(/^<(\s)*tag(\s)+/)) {
             return completion.tagsCompletion(this.services, currentWord);
         }
 

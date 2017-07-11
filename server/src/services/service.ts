@@ -71,7 +71,6 @@ export class Services {
     getTags(): Array<string> {
         let result = new Array();
         Object.keys(this.services).forEach(key => {
-            console.log('sfd');
             Object.keys(this.services[key].getTags()).forEach(key => {
                 if (!result.includes(key)) {
                     result.push(key);

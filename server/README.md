@@ -13,12 +13,13 @@ If vendor folder excluded - symfony services not provide
 ## Extension Settings
 
 ## Known Issues
-* Go to service definition
-* Tag completion
-* Parse php service configuration file
+* $this->getContainer()->get ContainerAwareCommand
+* когда идет апдейт документа не верно работает автокомплит
+* Go to service description from class
+* Symfony 3.3 autoconfigure 
 * Split public and private services
 * Form completion helper
-* Symfony 3.3 autoconfigure 
+* Parse php service configuration file
 * Tests
 
 Request textDocument/completion failed.

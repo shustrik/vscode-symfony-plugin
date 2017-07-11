@@ -40,7 +40,7 @@ export class CompletionYamlItemProvider {
 		let prevLineNumber = 1;
 		while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
 			//проблемная регулярка
-			if (lineText.match(/^(\s)*(arguments:)*(\s)+/)) {
+			if (lineText.match(/^(\s)*arguments:+/)) {
 				if (currentWord.includes('@')) {
 					return completion.serviceArgumentCompletion(this.services, currentWord.substring(1));
 				}
@@ -49,7 +49,7 @@ export class CompletionYamlItemProvider {
 				}
 				return [];
 			}
-			if (lineText.match(/^(\s)*(tags:)*(\s)+/)) {
+			if (lineText.match(/^(\s)*tags:+/)) {
 				return completion.tagsCompletion(this.services, currentWord);
 			}
 			lineText = document.lineAt(Position.create(position.line - prevLineNumber, 0));
