@@ -7,11 +7,9 @@ import {
 	TextDocuments, TextDocument, DidSaveTextDocumentParams,
 	InitializeParams, InitializeResult, TextDocumentIdentifier, TextDocumentPositionParams,
 	CompletionItem, CompletionItemKind, RequestType, Position,
-	SignatureHelp, SignatureInformation, ParameterInformation, Definition, DidChangeWatchedFilesParams
+	SignatureHelp, SignatureInformation, ParameterInformation, Definition, DidChangeWatchedFilesParams, DidChangeTextDocumentParams
 } from 'vscode-languageserver';
-import { CompletionYamlItemProvider } from './completion/completionYaml';
-import { CompletionXMLItemProvider } from './completion/completionXML';
-import { CompletionPHPItemProvider } from './completion/completionPhp';
+import { CompletionProvider } from './completion';
 import { DefinitionProvider } from './definition';
 import { Services } from './services/service';
 import { DocumentStore, ExtensionTextDocument } from './documents';
@@ -26,27 +24,22 @@ let discoverMaxOpenFiles = 100;
 let services: Services;
 let classStorage: ClassStorage;
 let documentStore: DocumentStore;
-let completionPhp: CompletionPHPItemProvider;
-let completionYaml: CompletionYamlItemProvider;
-let completionXml: CompletionXMLItemProvider;
+let completion: CompletionProvider;
 let definition: DefinitionProvider;
+let waiter: Promise<string>;
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 const parseFile = new RequestType<{ text: string, path: string }, void, void, void>('parseFile');
 const deleteFile = new RequestType<{ text: string, path: string }, void, void, void>('deleteFile');
-const changeFile = new RequestType<{ text: string, path: string }, void, void, void>('changeFile');
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+
 connection.onInitialize((params): InitializeResult => {
 	services = new Services();
 	classStorage = new ClassStorage();
 	documentStore = new DocumentStore();
-	completionPhp = new CompletionPHPItemProvider(services, classStorage);
-	completionXml = new CompletionXMLItemProvider(services, classStorage);
-	completionYaml = new CompletionYamlItemProvider(services, classStorage);
+	completion = new CompletionProvider(services, classStorage);
 	definition = new DefinitionProvider(services, classStorage);
 	return {
 		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Incremental,
+			textDocumentSync: TextDocumentSyncKind.Full,
 			workspaceSymbolProvider: true,
 			definitionProvider: true,
 			completionProvider: {
@@ -67,30 +60,28 @@ connection.onRequest(deleteFile, (params) => {
 	services.removePathDeps(params.path);
 });
 
-connection.onRequest(changeFile, (params) => {
-	parseRequestFile(params.path, params.text);
-});
-
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-	let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-	let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-	if (extension == 'php') {
-		return completionPhp.provideCompletionItems(
-			documentStore.get(fileName),
-			textDocumentPosition.position);
-	}
-	if (extension == 'yml' || extension == 'yaml') {
-		return completionYaml.provideCompletionItems(
-			documentStore.get(fileName),
-			textDocumentPosition.position);
-	}
-	if (extension == 'xml') {
-		return completionXml.provideCompletionItems(
-			documentStore.get(fileName),
-			textDocumentPosition.position);
-	}
+	return waitHandler(() => {
+		let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+		let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+		if (extension == 'php') {
+			return completion.provideCompletionPHPItems(
+				documentStore.get(fileName),
+				textDocumentPosition.position);
+		}
+		if (extension == 'yml' || extension == 'yaml') {
+			return completion.provideCompletionYAMLItems(
+				documentStore.get(fileName),
+				textDocumentPosition.position);
+		}
+		if (extension == 'xml') {
+			return completion.provideCompletionXMLItems(
+				documentStore.get(fileName),
+				textDocumentPosition.position);
+		}
 
-	return [];
+		return [];
+	});
 });
 
 connection.onWorkspaceSymbol((params) => {
@@ -100,9 +91,26 @@ connection.onWorkspaceSymbol((params) => {
 connection.onDefinition((textDocumentPosition: TextDocumentPositionParams): Definition => {
 	let extension = textDocumentPosition.textDocument.uri.split('.').pop();
 	let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-	let result = definition.provideDefinition(documentStore.get(fileName), textDocumentPosition.position);
+	let result = null;
+	if (extension == 'php') {
+		result = definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position)
+	}
+	if (extension == 'yml' || extension == 'yaml') {
+		result = definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position)
+	}
+	if (extension == 'xml') {
+		result = definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position)
+	}
 
 	return result;
+});
+
+connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
+	return waitHandler(() => {
+		let extension = params.textDocument.uri.split('.').pop();
+		let fileName = params.textDocument.uri.replace("file://", "");
+		parseRequestFile(fileName, params.contentChanges.pop().text);
+	});
 });
 
 function parseRequestFile(path: string, body: string) {
@@ -122,4 +130,8 @@ function parseRequestFile(path: string, body: string) {
 		documentStore.push(path, document);
 		xml_parser.parse(body, path, services);
 	}
+}
+function waitHandler<T>(callback: () => T) {
+	let result = callback();
+	return result;
 }

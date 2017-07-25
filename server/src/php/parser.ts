@@ -1,5 +1,6 @@
 import * as services from '../services/service'
-import { ClassStorage, ClassDeclaration, Position, ClassFunction, Variable, Use}from './phpStructure'
+import { ClassStorage, ClassDeclaration, ClassFunction, Variable, Use } from './phpStructure'
+import { Position } from 'vscode-languageserver';
 
 var engine = require('php-parser');
 var parserInst = new engine({
@@ -15,7 +16,7 @@ export function parseEval(text: string) {
     return parserInst.parseEval(text);
 }
 export function parse(code, path: string, classStorage: ClassStorage) {
-    let classDeclaration = new ClassDeclaration();
+    let classDeclaration = new ClassDeclaration(path);
     let ast = parserInst.parseCode(code);
     branchProcess(ast, classDeclaration);
     classStorage.add(path, classDeclaration);
@@ -109,8 +110,8 @@ function call(node, func: ClassFunction, classDeclaration: ClassDeclaration) {
 }
 
 function classProperty(node, classDeclaration: ClassDeclaration) {
-    let start = new Position(node.loc.start.line, node.loc.start.column, node.loc.start.offset)
-    let end = new Position(node.loc.end.line, node.loc.end.column, node.loc.end.offset)
+    let start = Position.create(node.loc.start.line, node.loc.start.offset)
+    let end = Position.create(node.loc.end.line, node.loc.end.offset)
     let variable = new Variable(node.name, start, end);
     classDeclaration.addVariable(variable);
 }
@@ -125,8 +126,8 @@ function assignment(node, func: ClassFunction, classDeclaration: ClassDeclaratio
         }
     }
     if (node.left && node.left.kind == "variable") {
-        let start = new Position(node.left.loc.start.line, node.left.loc.start.column, node.left.loc.start.offset)
-        let end = new Position(node.left.loc.end.line, node.left.loc.end.column, node.left.loc.end.offset)
+        let start = Position.create(node.loc.start.line, node.loc.start.offset)
+        let end = Position.create(node.loc.end.line, node.loc.end.offset)
         let variable = new Variable(node.left.name, start, end);
         if (node.right && node.right.kind == "new") {
             if (node.right.what && node.right.what.name) {
@@ -154,7 +155,10 @@ function use(node, classDeclaration: ClassDeclaration) {
     });
 }
 function classInstruction(node, classDeclaration: ClassDeclaration) {
+    let start = Position.create(node.loc.start.line, node.loc.start.offset)
+    let end = Position.create(node.loc.end.line, node.loc.end.offset)
     classDeclaration.setName(node.name);
+    classDeclaration.setPosition(start, end);
     if (node.implements) {
         node.implements.forEach(item => {
             classDeclaration.addInterface(item);
@@ -172,8 +176,8 @@ function classInstruction(node, classDeclaration: ClassDeclaration) {
 
 }
 function method(node, classDeclaration: ClassDeclaration) {
-    let start = new Position(node.loc.start.line, node.loc.start.column, node.loc.start.offset)
-    let end = new Position(node.loc.end.line, node.loc.end.column, node.loc.end.offset)
+    let start = Position.create(node.loc.start.line, node.loc.start.offset)
+    let end = Position.create(node.loc.end.line, node.loc.end.offset)
     let func = new ClassFunction(node.name, start, end);
     if (node.visibility == 'public') {
         func.visible();
@@ -182,8 +186,8 @@ function method(node, classDeclaration: ClassDeclaration) {
         func.static();
     }
     node.arguments.forEach(item => {
-        let start = new Position(item.loc.start.line, item.loc.start.column, item.loc.start.offset)
-        let end = new Position(item.loc.end.line, item.loc.end.column, item.loc.end.offset)
+        let start = Position.create(item.loc.start.line, item.loc.start.offset)
+        let end = Position.create(item.loc.end.line, item.loc.end.offset)
         let variable = new Variable(item.name, start, end);
         if (item.type) {
             variable.setType(item.type.name);

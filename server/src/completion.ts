@@ -1,21 +1,26 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const vscode_languageserver_1 = require("vscode-languageserver");
-const helper = require("../php/completionHelper");
-class DefinitionProvider {
-    constructor(services, classStorage) {
+import { CompletionItem, CompletionItemKind, TextDocument, Position, Range } from 'vscode-languageserver';
+import { Services } from './services/service';
+import { dirname, basename } from 'path';
+import { ClassStorage } from './php/phpStructure';
+import * as helper from './php/completionHelper';
+import { ExtensionTextDocument } from './documents';
+import * as completion from './completion';
+
+export class CompletionProvider {
+    services: Services;
+    classStorage: ClassStorage
+    constructor(services: Services, classStorage: ClassStorage) {
         this.services = services;
         this.classStorage = classStorage;
     }
-    provideCompletionPHPItems(document, position) {
+
+    provideCompletionPHPItems(document: ExtensionTextDocument, position: Position): CompletionItem[] {
         let lineText = document.lineAt(position);
         let wordAtPosition = document.getWordRangeAtPosition(position);
-        console.log(lineText);
         if (!wordAtPosition) {
             return [];
         }
         let currentWord = document.getRangeText(wordAtPosition);
-        console.log(currentWord);
         if (helper.isService(this.classStorage, document.uri, lineText, position, currentWord)) {
             return this.serviceArgumentCompletion(this.services, currentWord);
         }
@@ -24,7 +29,8 @@ class DefinitionProvider {
         }
         return helper.getServiceMethods(this.classStorage, document.uri, lineText, this.services, currentWord);
     }
-    provideCompletionXMLItems(document, position) {
+
+    provideCompletionXMLItems(document: ExtensionTextDocument, position: Position): CompletionItem[] {
         let lineText = document.lineAt(position).trim();
         let wordAtPosition = document.getWordRangeAtPosition(position, /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g);
         if (!wordAtPosition) {
@@ -46,15 +52,17 @@ class DefinitionProvider {
         if (lineText.match(/^<(\s)*tag(\s)+/)) {
             return this.tagsCompletion(this.services, currentWord);
         }
+
         return [];
     }
-    provideCompletionYAMLItems(document, position) {
+
+    provideCompletionYAMLItems(document: ExtensionTextDocument, position: Position): CompletionItem[] {
         let lineText = document.lineAt(position);
         let wordAtPosition = document.getWordRangeAtPosition(position, /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g);
         if (!wordAtPosition) {
             return [];
         }
-        let currentWord = document.getRangeText(vscode_languageserver_1.Range.create(vscode_languageserver_1.Position.create(wordAtPosition.start.line, wordAtPosition.start.character - 1), wordAtPosition.end));
+        let currentWord = document.getRangeText(Range.create(Position.create(wordAtPosition.start.line, wordAtPosition.start.character - 1), wordAtPosition.end));
         if (lineText.match(/^(\s)*(class:)(\s)+/)) {
             return this.classCodeCompletion(this.services, this.classStorage, currentWord);
         }
@@ -79,17 +87,18 @@ class DefinitionProvider {
             if (lineText.match(/^(\s)*tags:+/)) {
                 return this.tagsCompletion(this.services, currentWord);
             }
-            lineText = document.lineAt(vscode_languageserver_1.Position.create(position.line - prevLineNumber, 0));
+            lineText = document.lineAt(Position.create(position.line - prevLineNumber, 0));
             prevLineNumber++;
         }
         return [];
     }
-    classCodeCompletion(services, classStorage, currentWord) {
+
+    private classCodeCompletion(services: Services, classStorage: ClassStorage, currentWord: string): CompletionItem[] {
         let suggest = [];
         classStorage.getFqnClasses().forEach(element => {
             if (element.match(currentWord.trim())) {
-                let packageItem = vscode_languageserver_1.CompletionItem.create(element);
-                packageItem.kind = vscode_languageserver_1.CompletionItemKind.Keyword;
+                let packageItem = CompletionItem.create(element);
+                packageItem.kind = CompletionItemKind.Keyword;
                 packageItem.insertText = element;
                 packageItem.label = element;
                 suggest.push(packageItem);
@@ -97,12 +106,13 @@ class DefinitionProvider {
         });
         return suggest;
     }
-    parameterArgumentCompletion(services, currentWord) {
+
+    private parameterArgumentCompletion(services: Services, currentWord: string): CompletionItem[] {
         let suggest = [];
         services.getParameters().forEach(element => {
             if (element.match(currentWord)) {
-                let packageItem = vscode_languageserver_1.CompletionItem.create(element);
-                packageItem.kind = vscode_languageserver_1.CompletionItemKind.Keyword;
+                let packageItem = CompletionItem.create(element);
+                packageItem.kind = CompletionItemKind.Keyword;
                 packageItem.insertText = element;
                 packageItem.label = element;
                 suggest.push(packageItem);
@@ -110,12 +120,12 @@ class DefinitionProvider {
         });
         return suggest;
     }
-    serviceArgumentCompletion(services, currentWord) {
+    private serviceArgumentCompletion(services: Services, currentWord: string): CompletionItem[] {
         let suggest = [];
         services.getServicesIds().forEach(element => {
             if (element.match(currentWord)) {
-                let packageItem = vscode_languageserver_1.CompletionItem.create(element);
-                packageItem.kind = vscode_languageserver_1.CompletionItemKind.Keyword;
+                let packageItem = CompletionItem.create(element);
+                packageItem.kind = CompletionItemKind.Keyword;
                 packageItem.insertText = element;
                 packageItem.label = element;
                 suggest.push(packageItem);
@@ -123,12 +133,12 @@ class DefinitionProvider {
         });
         return suggest;
     }
-    tagsCompletion(services, currentWord) {
+    private tagsCompletion(services: Services, currentWord: string): CompletionItem[] {
         let suggest = [];
         services.getTags().forEach(element => {
             if (element.match(currentWord.trim())) {
-                let packageItem = vscode_languageserver_1.CompletionItem.create(element);
-                packageItem.kind = vscode_languageserver_1.CompletionItemKind.Keyword;
+                let packageItem = CompletionItem.create(element);
+                packageItem.kind = CompletionItemKind.Keyword;
                 packageItem.insertText = element;
                 packageItem.label = element;
                 suggest.push(packageItem);
@@ -137,5 +147,3 @@ class DefinitionProvider {
         return suggest;
     }
 }
-exports.DefinitionProvider = DefinitionProvider;
-//# sourceMappingURL=completion.js.map

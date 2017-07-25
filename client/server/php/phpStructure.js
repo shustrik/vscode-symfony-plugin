@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const vscode_languageserver_1 = require("vscode-languageserver");
 class ClassStorage {
     constructor() {
         this.classes = {};
@@ -29,26 +30,24 @@ class ClassStorage {
     getClassInFile(fileName) {
         return this.classes[fileName];
     }
-    getClassFileName(className) {
-        for (let path in this.classes) {
-            let classDeclaration = this.classes[path];
-            if (classDeclaration.getName() &&
-                (classDeclaration.getName() == className || classDeclaration.getFqnName() == className)) {
-                return path;
-            }
-        }
-        return null;
-    }
 }
 exports.ClassStorage = ClassStorage;
 class ClassDeclaration {
-    constructor() {
+    constructor(path) {
+        this.path = path;
         this.using = new Array();
         this.parameters = new Array();
         this.interfaces = new Array();
         this.services = new Array();
         this.functions = new Array();
         this.variables = {};
+    }
+    setPosition(start, end) {
+        this.start = start;
+        this.end = end;
+    }
+    getClassRange() {
+        return vscode_languageserver_1.Range.create(this.start, this.end);
     }
     hasInterface(interfaceName) {
         for (var index = 0; index < this.interfaces.length; index++) {
@@ -121,6 +120,9 @@ class ClassDeclaration {
     }
     getParent() {
         return this.parent;
+    }
+    getPath() {
+        return this.path;
     }
     abstract() {
         this.isAbstract = true;
@@ -197,12 +199,4 @@ class Use {
     }
 }
 exports.Use = Use;
-class Position {
-    constructor(line = 0, column = 0, offset = 0) {
-        this.line = line;
-        this.column = column;
-        this.offset = offset;
-    }
-}
-exports.Position = Position;
 //# sourceMappingURL=phpStructure.js.map

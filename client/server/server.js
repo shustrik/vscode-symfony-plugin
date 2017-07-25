@@ -3,9 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode_languageserver_1 = require("vscode-languageserver");
-const completionYaml_1 = require("./completion/completionYaml");
-const completionXML_1 = require("./completion/completionXML");
-const completionPhp_1 = require("./completion/completionPhp");
+const completion_1 = require("./completion");
 const definition_1 = require("./definition");
 const service_1 = require("./services/service");
 const documents_1 = require("./documents");
@@ -18,27 +16,21 @@ let discoverMaxOpenFiles = 100;
 let services;
 let classStorage;
 let documentStore;
-let completionPhp;
-let completionYaml;
-let completionXml;
+let completion;
 let definition;
+let waiter;
 let connection = vscode_languageserver_1.createConnection(new vscode_languageserver_1.IPCMessageReader(process), new vscode_languageserver_1.IPCMessageWriter(process));
 const parseFile = new vscode_languageserver_1.RequestType('parseFile');
 const deleteFile = new vscode_languageserver_1.RequestType('deleteFile');
-const changeFile = new vscode_languageserver_1.RequestType('changeFile');
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 connection.onInitialize((params) => {
     services = new service_1.Services();
     classStorage = new phpStructure_1.ClassStorage();
     documentStore = new documents_1.DocumentStore();
-    completionPhp = new completionPhp_1.CompletionPHPItemProvider(services, classStorage);
-    completionXml = new completionXML_1.CompletionXMLItemProvider(services, classStorage);
-    completionYaml = new completionYaml_1.CompletionYamlItemProvider(services, classStorage);
+    completion = new completion_1.CompletionProvider(services, classStorage);
     definition = new definition_1.DefinitionProvider(services, classStorage);
     return {
         capabilities: {
-            textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Incremental,
+            textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Full,
             workspaceSymbolProvider: true,
             definitionProvider: true,
             completionProvider: {
@@ -55,22 +47,21 @@ connection.onRequest(deleteFile, (params) => {
     documentStore.remove(params.path);
     services.removePathDeps(params.path);
 });
-connection.onRequest(changeFile, (params) => {
-    parseRequestFile(params.path, params.text);
-});
 connection.onCompletion((textDocumentPosition) => {
-    let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-    let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-    if (extension == 'php') {
-        return completionPhp.provideCompletionItems(documentStore.get(fileName), textDocumentPosition.position);
-    }
-    if (extension == 'yml' || extension == 'yaml') {
-        return completionYaml.provideCompletionItems(documentStore.get(fileName), textDocumentPosition.position);
-    }
-    if (extension == 'xml') {
-        return completionXml.provideCompletionItems(documentStore.get(fileName), textDocumentPosition.position);
-    }
-    return [];
+    return waitHandler(() => {
+        let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+        let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+        if (extension == 'php') {
+            return completion.provideCompletionPHPItems(documentStore.get(fileName), textDocumentPosition.position);
+        }
+        if (extension == 'yml' || extension == 'yaml') {
+            return completion.provideCompletionYAMLItems(documentStore.get(fileName), textDocumentPosition.position);
+        }
+        if (extension == 'xml') {
+            return completion.provideCompletionXMLItems(documentStore.get(fileName), textDocumentPosition.position);
+        }
+        return [];
+    });
 });
 connection.onWorkspaceSymbol((params) => {
     return [];
@@ -78,8 +69,24 @@ connection.onWorkspaceSymbol((params) => {
 connection.onDefinition((textDocumentPosition) => {
     let extension = textDocumentPosition.textDocument.uri.split('.').pop();
     let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-    let result = definition.provideDefinition(documentStore.get(fileName), textDocumentPosition.position);
+    let result = null;
+    if (extension == 'php') {
+        result = definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position);
+    }
+    if (extension == 'yml' || extension == 'yaml') {
+        result = definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position);
+    }
+    if (extension == 'xml') {
+        result = definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position);
+    }
     return result;
+});
+connection.onDidChangeTextDocument((params) => {
+    return waitHandler(() => {
+        let extension = params.textDocument.uri.split('.').pop();
+        let fileName = params.textDocument.uri.replace("file://", "");
+        parseRequestFile(fileName, params.contentChanges.pop().text);
+    });
 });
 function parseRequestFile(path, body) {
     let extension = path.split('.').pop();
@@ -98,5 +105,9 @@ function parseRequestFile(path, body) {
         documentStore.push(path, document);
         xml_parser.parse(body, path, services);
     }
+}
+function waitHandler(callback) {
+    let result = callback();
+    return result;
 }
 //# sourceMappingURL=server.js.map

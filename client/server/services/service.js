@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const vscode_languageserver_1 = require("vscode-languageserver");
 exports.containerCompleteClass = {
     container: 'Symfony\\Component\\DependencyInjection\\ContainerInterface',
     controllerContainer: 'Symfony\\Bundle\\FrameworkBundle\\Controller\\Controller',
@@ -80,9 +81,19 @@ class Services {
     getParameters() {
         return Object.keys(this.parameters);
     }
-    getServiceClass(id) {
+    getService(id) {
         let service = this.services[id];
-        return service ? service.class : null;
+        return service ? service : null;
+    }
+    getServiceByClass(className) {
+        let service = null;
+        Object.keys(this.services).some(key => {
+            if (this.services[key].getClass() == className) {
+                service = this.services[key];
+                return true;
+            }
+        });
+        return service;
     }
 }
 exports.Services = Services;
@@ -97,12 +108,14 @@ class Tag {
 }
 exports.Tag = Tag;
 class Service {
-    constructor(id, className) {
+    constructor(id, className, start, path) {
         this.id = id;
         this.class = className;
         this.isAbstract = false;
         this.arguments = new Array();
+        this.start = start;
         this.tags = {};
+        this.path = path;
     }
     addArgument(key, argument) {
         this.arguments[key] = argument;
@@ -120,6 +133,15 @@ class Service {
     }
     abstract() {
         this.isAbstract = true;
+    }
+    getRange() {
+        return vscode_languageserver_1.Range.create(this.start, this.start);
+    }
+    getPath() {
+        return this.path;
+    }
+    getClass() {
+        return this.class;
     }
 }
 exports.Service = Service;

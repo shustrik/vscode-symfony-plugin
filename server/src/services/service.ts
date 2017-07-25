@@ -1,3 +1,4 @@
+import { Position, Range } from 'vscode-languageserver';
 export const containerCompleteClass = {
     container: 'Symfony\\Component\\DependencyInjection\\ContainerInterface',
     controllerContainer: 'Symfony\\Bundle\\FrameworkBundle\\Controller\\Controller',
@@ -82,9 +83,19 @@ export class Services {
     getParameters(): Array<string> {
         return Object.keys(this.parameters);
     }
-    getServiceClass(id: string) {
+    getService(id: string) {
         let service = this.services[id];
-        return service ? service.class : null;
+        return service ? service : null;
+    }
+    getServiceByClass(className: string): Service {
+        let service = null;
+        Object.keys(this.services).some(key => {
+            if (this.services[key].getClass() == className) {
+                service = this.services[key];
+                return true;
+            }
+        });
+        return service;
     }
 }
 
@@ -120,13 +131,17 @@ export class Service {
     class: string
     tags: TagHash
     isAbstract: boolean
+    start: Position
+    path: string
 
-    constructor(id: string, className: string) {
+    constructor(id: string, className: string, start: Position, path: string) {
         this.id = id;
         this.class = className;
         this.isAbstract = false;
         this.arguments = new Array();
+        this.start = start;
         this.tags = {};
+        this.path = path;
     }
     addArgument(key: number, argument: Argument) {
         this.arguments[key] = argument;
@@ -144,6 +159,16 @@ export class Service {
     }
     abstract() {
         this.isAbstract = true;
+    }
+    getRange() {
+        return Range.create(this.start, this.start);
+    }
+    getPath() {
+        return this.path;
+    }
+
+    getClass() {
+        return this.class;
     }
 }
 

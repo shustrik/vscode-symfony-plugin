@@ -1,11 +1,12 @@
 import { Services, Service, Tag, ServiceArgument, TextArgument, ParameterArgument, CollectionArgument, Argument } from '../service'
+import { Position } from 'vscode-languageserver';
 import * as xml from 'xml-js';
 export function parse(body: string, path: string, services: Services) {
     try {
         let parsed = xml.xml2js(body, { compact: true });
         if (parsed.container && parsed.container instanceof Object) {
             if (parsed.container.services) {
-                services.addServices(parseServices(parsed.container.services), path);
+                services.addServices(parseServices(parsed.container.services, parseServiceLines(body), path), path);
             }
             if (parsed.container.parameters) {
                 services.addParameters(parseParameters(parsed.container.parameters), path);
@@ -28,12 +29,16 @@ function parseTags(tag) {
     }
     return {};
 }
-function parseServices(services) {
+function parseServices(services, serviceLines, path) {
     let parsedServices = [];
     let pushService = function (service) {
         let attributes = service['_attributes'];
         let className = attributes['class'] ? attributes['class'] : attributes['id'];
-        let parsedService = new Service(attributes['id'], className);
+        let position = Position.create(0, 0);
+        if (serviceLines[attributes['id']]) {
+            position = Position.create(serviceLines[attributes['id']], 0);
+        }
+        let parsedService = new Service(attributes['id'], className, position, path);
         parsedService.addArguments(parseArguments(service['argument']));
         parsedService.addTags(parseTags(service['tag']));
         parsedServices.push(parsedService);
@@ -95,11 +100,28 @@ function createArgument(argument): Argument {
     }
     if (attributes['type'] == 'collection') {
         let args = []
-        if (argument['argument']) {
+        if (argument['argument'] && Array.isArray(argument['argument'])) {
             for (let key in argument['argument']) {
                 args.push(createArgument(argument['argument'][key]));
             }
         }
+        if (argument['argument'] && !Array.isArray(argument['argument'])) {
+            args.push(createArgument(argument['argument']));
+        }
         return new CollectionArgument(args);
     }
+}
+
+
+function parseServiceLines(body: string) {
+    let lines = body.split('\n');
+    let result = {};
+    lines.forEach((line, number) => {
+        var match = line.match(/<(\s)*service(\s)+(id|class)="([%?\w\.]+)"/)
+        if (match) {
+            result[match[4]] = number;
+        }
+    });
+
+    return result;
 }

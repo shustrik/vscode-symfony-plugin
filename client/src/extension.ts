@@ -42,16 +42,16 @@ export function activate(context: ExtensionContext) {
 	let ymlWatcher = workspace.createFileSystemWatcher('**/*.yml');
 	phpWatcher.onDidDelete(onDidDelete);
 	phpWatcher.onDidCreate(onDidCreate);
-	phpWatcher.onDidChange(onDidChange);
+	// phpWatcher.onDidChange(onDidChange);
 	xmlWatcher.onDidDelete(onDidDelete);
 	xmlWatcher.onDidCreate(onDidCreate);
-	xmlWatcher.onDidChange(onDidChange);
+	// xmlWatcher.onDidChange(onDidChange);
 	yamlWatcher.onDidDelete(onDidDelete);
 	yamlWatcher.onDidCreate(onDidCreate);
-	yamlWatcher.onDidChange(onDidChange);
+	// yamlWatcher.onDidChange(onDidChange);
 	ymlWatcher.onDidDelete(onDidDelete);
 	ymlWatcher.onDidCreate(onDidCreate);
-	ymlWatcher.onDidChange(onDidChange);
+	// ymlWatcher.onDidChange(onDidChange);
 
 	let ready = languageClient.onReady();
 
@@ -60,11 +60,11 @@ export function activate(context: ExtensionContext) {
 			readFiles(['*.yaml', '*.yml'], (uriArray: vscode.Uri[]) => {
 				onWorkspaceFindFiles(uriArray, parseFile, 'yaml')
 			});
-
+		}).then(() => {
 			readFiles(['*.xml'], (uriArray: vscode.Uri[]) => {
 				onWorkspaceFindFiles(uriArray, parseFile, 'xml')
 			});
-
+		}).then(() => {
 			readFiles(['*.php'], (uriArray: vscode.Uri[]) => {
 				onWorkspaceFindFiles(uriArray, parseFile, 'php')
 			});
@@ -167,17 +167,16 @@ function proccessFile(
 			onFailure();
 			return;
 		}
-
-		onSuccess();
 	})
 
 }
-function parseFile(uri: vscode.Uri) {
-	return languageClient.sendRequest(
+function parseFile(uri: vscode.Uri, onSuccess?: () => void) {
+	languageClient.sendRequest(
 		"parseFile",
 		{ text: fs.readFileSync(uri.fsPath, 'utf8'), path: uri.fsPath }
-	);
+	).then(() => { onSuccess(); });
 };
+
 function onDidDelete(uri: vscode.Uri) {
 	languageClient.sendRequest(
 		"deleteFile",
@@ -191,9 +190,9 @@ function onDidCreate(uri: vscode.Uri) {
 		{ text: fs.readFileSync(uri.fsPath, 'utf8'), path: uri.fsPath }
 	);
 }
-function onDidChange(uri: vscode.Uri) {
-	languageClient.sendRequest(
-		"changeFile",
-		{ text: fs.readFileSync(uri.fsPath, 'utf8'), path: uri.fsPath }
-	);
-}
+// function onDidChange(uri: vscode.Uri) {
+//     languageClient.sendRequest(
+// 		"changeFile",
+// 		{ text: fs.readFileSync(uri.fsPath, 'utf8'), path: uri.fsPath }
+// 	);
+// }

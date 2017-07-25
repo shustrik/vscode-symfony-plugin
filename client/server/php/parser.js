@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const services = require("../services/service");
 const phpStructure_1 = require("./phpStructure");
+const vscode_languageserver_1 = require("vscode-languageserver");
 var engine = require('php-parser');
 var parserInst = new engine({
     parser: {
@@ -17,7 +18,7 @@ function parseEval(text) {
 }
 exports.parseEval = parseEval;
 function parse(code, path, classStorage) {
-    let classDeclaration = new phpStructure_1.ClassDeclaration();
+    let classDeclaration = new phpStructure_1.ClassDeclaration(path);
     let ast = parserInst.parseCode(code);
     branchProcess(ast, classDeclaration);
     classStorage.add(path, classDeclaration);
@@ -106,8 +107,8 @@ function call(node, func, classDeclaration) {
     }
 }
 function classProperty(node, classDeclaration) {
-    let start = new phpStructure_1.Position(node.loc.start.line, node.loc.start.column, node.loc.start.offset);
-    let end = new phpStructure_1.Position(node.loc.end.line, node.loc.end.column, node.loc.end.offset);
+    let start = vscode_languageserver_1.Position.create(node.loc.start.line, node.loc.start.offset);
+    let end = vscode_languageserver_1.Position.create(node.loc.end.line, node.loc.end.offset);
     let variable = new phpStructure_1.Variable(node.name, start, end);
     classDeclaration.addVariable(variable);
 }
@@ -122,8 +123,8 @@ function assignment(node, func, classDeclaration) {
         }
     }
     if (node.left && node.left.kind == "variable") {
-        let start = new phpStructure_1.Position(node.left.loc.start.line, node.left.loc.start.column, node.left.loc.start.offset);
-        let end = new phpStructure_1.Position(node.left.loc.end.line, node.left.loc.end.column, node.left.loc.end.offset);
+        let start = vscode_languageserver_1.Position.create(node.loc.start.line, node.loc.start.offset);
+        let end = vscode_languageserver_1.Position.create(node.loc.end.line, node.loc.end.offset);
         let variable = new phpStructure_1.Variable(node.left.name, start, end);
         if (node.right && node.right.kind == "new") {
             if (node.right.what && node.right.what.name) {
@@ -151,7 +152,10 @@ function use(node, classDeclaration) {
     });
 }
 function classInstruction(node, classDeclaration) {
+    let start = vscode_languageserver_1.Position.create(node.loc.start.line, node.loc.start.offset);
+    let end = vscode_languageserver_1.Position.create(node.loc.end.line, node.loc.end.offset);
     classDeclaration.setName(node.name);
+    classDeclaration.setPosition(start, end);
     if (node.implements) {
         node.implements.forEach(item => {
             classDeclaration.addInterface(item);
@@ -168,8 +172,8 @@ function classInstruction(node, classDeclaration) {
     }
 }
 function method(node, classDeclaration) {
-    let start = new phpStructure_1.Position(node.loc.start.line, node.loc.start.column, node.loc.start.offset);
-    let end = new phpStructure_1.Position(node.loc.end.line, node.loc.end.column, node.loc.end.offset);
+    let start = vscode_languageserver_1.Position.create(node.loc.start.line, node.loc.start.offset);
+    let end = vscode_languageserver_1.Position.create(node.loc.end.line, node.loc.end.offset);
     let func = new phpStructure_1.ClassFunction(node.name, start, end);
     if (node.visibility == 'public') {
         func.visible();
@@ -178,8 +182,8 @@ function method(node, classDeclaration) {
         func.static();
     }
     node.arguments.forEach(item => {
-        let start = new phpStructure_1.Position(item.loc.start.line, item.loc.start.column, item.loc.start.offset);
-        let end = new phpStructure_1.Position(item.loc.end.line, item.loc.end.column, item.loc.end.offset);
+        let start = vscode_languageserver_1.Position.create(item.loc.start.line, item.loc.start.offset);
+        let end = vscode_languageserver_1.Position.create(item.loc.end.line, item.loc.end.offset);
         let variable = new phpStructure_1.Variable(item.name, start, end);
         if (item.type) {
             variable.setType(item.type.name);

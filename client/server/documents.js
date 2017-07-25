@@ -50,6 +50,9 @@ class ExtensionTextDocument {
         resultLines.push(this.lines[endLineIndex].substring(0, range.end.character));
         return resultLines.join(ExtensionTextDocument.NL);
     }
+    getUri() {
+        return this.uri;
+    }
     lineAt(lineOrPosition) {
         let line;
         line = lineOrPosition.line;
@@ -58,12 +61,6 @@ class ExtensionTextDocument {
         }
         let result = this.lines[line];
         return result;
-    }
-    buildLineStarts() {
-        this.lineStarts.push(0);
-        this.lines.forEach(line => {
-            this.lineStarts.push(this.lineStarts[this.lines.length - 1] + line.length + ExtensionTextDocument.NL.length);
-        });
     }
     getWordRangeAtPosition(position, regexp) {
         if (!regexp) {
@@ -96,6 +93,12 @@ class ExtensionTextDocument {
     }
     isNewlineCharacter(charCode) {
         return charCode === ExtensionTextDocument.NL.charCodeAt(0);
+    }
+    buildLineStarts() {
+        this.lineStarts.push(0);
+        this.lines.forEach(line => {
+            this.lineStarts.push(this.lineStarts[this.lines.length - 1] + line.length + ExtensionTextDocument.NL.length);
+        });
     }
 }
 ExtensionTextDocument.NL = '\n';

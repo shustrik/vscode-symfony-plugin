@@ -43,8 +43,11 @@ export function getServiceMethods(classStorage: ClassStorage, fileName: string, 
     return result;
 }
 function getClassServiceMethods(services: Services, classStorage: ClassStorage, service: string, currentWord: string) {
-    let className = services.getServiceClass(service);
-    let classDeclaration = classStorage.getClassByName(className);
+    let serviceDefition = services.getService(service);
+    if (!serviceDefition) {
+        return [];
+    }
+    let classDeclaration = classStorage.getClassByName(serviceDefition.getClass());
     if (!classDeclaration) {
         return [];
     }

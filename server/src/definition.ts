@@ -20,18 +20,44 @@ export class DefinitionProvider {
 		this.classStorage = classStorage;
 	}
 
-	public provideDefinition(document: ExtensionTextDocument, position: Position): Definition {
+	public providePHPDefinition(document: ExtensionTextDocument, position: Position): Definition {
 		let lineText = document.lineAt(position);
 		let wordAtPosition = document.getWordRangeAtPosition(position);
 		if (!wordAtPosition) {
 			return [];
 		}
 		let currentWord = document.getRangeText(wordAtPosition);
-		let service = this.services.getServiceClass(currentWord);
-		if (service) {
-			let filename = this.classStorage.getClassFileName(service);
-			return Location.create('file://' + filename, Range.create(Position.create(4, 0), Position.create(4, 10)));
+		let classDeclaration = this.classStorage.getClassByName(currentWord);
+		if (classDeclaration && classDeclaration.getPath() == document.getUri()) {
+			let service = this.services.getServiceByClass(classDeclaration.getFqnName());
+			return Location.create('file://' + service.getPath(), service.getRange());
 		}
+		let service = this.services.getService(currentWord);
+		if (service) {
+			let classDeclaration = this.classStorage.getClassByName(service.getClass());
+			return Location.create('file://' + classDeclaration.getPath(), classDeclaration.getClassRange());
+		}
+		return null
+	}
+	public provideYamlDefinition(document: ExtensionTextDocument, position: Position): Definition {
+		let lineText = document.lineAt(position);
+		let wordAtPosition = document.getWordRangeAtPosition(position, /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\|\;\:\'\"\,\<\>\?\s]+)/g);
+		if (!wordAtPosition) {
+			return [];
+		}
+		let currentWord = document.getRangeText(wordAtPosition);
+		let classDeclaration = this.classStorage.getClassByName(currentWord);
+		if (classDeclaration) {
+			return Location.create('file://' + classDeclaration.getPath(), classDeclaration.getClassRange());
+		}
+		let service = this.services.getService(currentWord);
+		if (service) {
+			let classDeclaration = this.classStorage.getClassByName(service.getClass());
+			return Location.create('file://' + classDeclaration.getPath(), classDeclaration.getClassRange());
+		}
+		return null;
+	}
+	public provideXmlDefinition(document: ExtensionTextDocument, position: Position): Definition {
 		return null
 	}
 }

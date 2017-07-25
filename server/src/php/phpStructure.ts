@@ -1,3 +1,4 @@
+import { Range, Position } from 'vscode-languageserver';
 export class ClassStorage {
     classes: ClassStorageType
     constructor() {
@@ -28,17 +29,6 @@ export class ClassStorage {
     getClassInFile(fileName: string) {
         return this.classes[fileName];
     }
-    
-    getClassFileName(className: string) {
-        for (let path in this.classes) {
-            let classDeclaration = this.classes[path];
-            if (classDeclaration.getName() &&
-                (classDeclaration.getName() == className|| classDeclaration.getFqnName() == className)) {
-                return path;
-            }
-        }
-        return null;
-    }
 }
 export class ClassDeclaration {
     name: string
@@ -51,13 +41,24 @@ export class ClassDeclaration {
     services: Array<String>
     parameters: Array<String>
     interfaces: Array<String>
-    constructor() {
+    start: Position
+    end: Position
+    path: string
+    constructor(path: string) {
+        this.path = path;
         this.using = new Array<Use>();
         this.parameters = new Array<String>();
         this.interfaces = new Array<String>();
         this.services = new Array<String>();
         this.functions = new Array<ClassFunction>();
         this.variables = {};
+    }
+    setPosition(start: Position, end: Position) {
+        this.start = start;
+        this.end = end;
+    }
+    getClassRange() {
+        return Range.create(this.start, this.end);
     }
     hasInterface(interfaceName: string) {
         for (var index = 0; index < this.interfaces.length; index++) {
@@ -130,6 +131,9 @@ export class ClassDeclaration {
     }
     getParent() {
         return this.parent;
+    }
+    getPath() {
+        return this.path;
     }
     abstract() {
         this.isAbstract = true;
@@ -216,17 +220,6 @@ export class Use {
         }
         return this.name.search(name) > 0 ? this.name : false;
     }
-}
-export class Position {
-    constructor(line = 0, column = 0, offset = 0) {
-        this.line = line;
-        this.column = column;
-        this.offset = offset;
-    }
-
-    public line: number;
-    public column: number;
-    public offset: number;
 }
 
 interface VariableStorage {

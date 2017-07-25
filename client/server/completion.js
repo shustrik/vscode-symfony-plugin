@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_languageserver_1 = require("vscode-languageserver");
-const helper = require("../php/completionHelper");
-class DefinitionProvider {
+const helper = require("./php/completionHelper");
+class CompletionProvider {
     constructor(services, classStorage) {
         this.services = services;
         this.classStorage = classStorage;
@@ -10,12 +10,10 @@ class DefinitionProvider {
     provideCompletionPHPItems(document, position) {
         let lineText = document.lineAt(position);
         let wordAtPosition = document.getWordRangeAtPosition(position);
-        console.log(lineText);
         if (!wordAtPosition) {
             return [];
         }
         let currentWord = document.getRangeText(wordAtPosition);
-        console.log(currentWord);
         if (helper.isService(this.classStorage, document.uri, lineText, position, currentWord)) {
             return this.serviceArgumentCompletion(this.services, currentWord);
         }
@@ -137,5 +135,5 @@ class DefinitionProvider {
         return suggest;
     }
 }
-exports.DefinitionProvider = DefinitionProvider;
+exports.CompletionProvider = CompletionProvider;
 //# sourceMappingURL=completion.js.map

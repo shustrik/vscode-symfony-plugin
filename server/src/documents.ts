@@ -39,6 +39,7 @@ export class ExtensionTextDocument implements TextDocument {
     getText(): string {
         return this.lines.join(ExtensionTextDocument.NL);
     }
+
     positionAt(offset: number): Position {
         offset = Math.floor(offset);
         offset = Math.max(0, offset);
@@ -68,6 +69,10 @@ export class ExtensionTextDocument implements TextDocument {
         return resultLines.join(ExtensionTextDocument.NL);
     }
 
+    getUri() {
+        return this.uri;
+    }
+
     lineAt(lineOrPosition: Position): string {
 
         let line: number;
@@ -82,12 +87,6 @@ export class ExtensionTextDocument implements TextDocument {
         return result;
     }
 
-    private buildLineStarts() {
-        this.lineStarts.push(0);
-        this.lines.forEach(line => {
-            this.lineStarts.push(this.lineStarts[this.lines.length - 1] + line.length + ExtensionTextDocument.NL.length);
-        });
-    }
     getWordRangeAtPosition(position: Position, regexp?: RegExp): Range {
         if (!regexp) {
             regexp = /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+)/g;
@@ -102,6 +101,7 @@ export class ExtensionTextDocument implements TextDocument {
         }
         return undefined;
     }
+
     getWordAtText(text: string, offset: number, wordDefinition: RegExp) {
         let lineStart = offset;
         while (lineStart > 0 && !this.isNewlineCharacter(text.charCodeAt(lineStart - 1))) {
@@ -124,7 +124,15 @@ export class ExtensionTextDocument implements TextDocument {
 
         return { start: offset, length: 0 };
     }
+
     isNewlineCharacter(charCode: number) {
         return charCode === ExtensionTextDocument.NL.charCodeAt(0);
+    }
+
+    private buildLineStarts() {
+        this.lineStarts.push(0);
+        this.lines.forEach(line => {
+            this.lineStarts.push(this.lineStarts[this.lines.length - 1] + line.length + ExtensionTextDocument.NL.length);
+        });
     }
 }
