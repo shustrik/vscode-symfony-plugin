@@ -38,14 +38,16 @@ function isServiceConditions(classStorage, classDeclaration, position, currentWo
     if (node.kind == 'propertylookup') {
         if (node.what.kind == 'variable') {
             let func = classDeclaration.findMethodByLine(position.line);
-            let type = func.getVariable(node.what.name);
-            if (type) {
-                let fqn = classDeclaration.getFQNFromName(type.getType());
-                if (fqn == services.containerCompleteClass.containerBuilder &&
-                    node.offset.kind == 'constref' &&
-                    (node.offset.name == 'getDefinition' || node.offset.name == 'hasDefinition')) {
-                    if (parent && parent.arguments && parent.arguments[0].kind == 'string' && parent.arguments[0].value == currentWord) {
-                        return true;
+            if (func) {
+                let type = func.getVariable(node.what.name);
+                if (type) {
+                    let fqn = classDeclaration.getFQNFromName(type.getType());
+                    if (fqn == services.containerCompleteClass.containerBuilder &&
+                        node.offset.kind == 'constref' &&
+                        (node.offset.name == 'getDefinition' || node.offset.name == 'hasDefinition')) {
+                        if (parent && parent.arguments && parent.arguments[0].kind == 'string' && parent.arguments[0].value == currentWord) {
+                            return true;
+                        }
                     }
                 }
             }

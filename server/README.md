@@ -15,7 +15,6 @@ If vendor folder excluded - symfony services not provide
 ## Extension Settings
 
 ## Known Issues
-* $this->getContainer()->get ContainerAwareCommand
 * Symfony 3.3 autoconfigure 
 * Split public and private services
 * Form completion helper

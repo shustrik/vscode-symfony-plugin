@@ -62,9 +62,15 @@ export class ClassDeclaration {
     }
     hasInterface(interfaceName: string) {
         for (var index = 0; index < this.interfaces.length; index++) {
-            if (this.interfaces[index] = interfaceName) {
+            if (this.interfaces[index] == interfaceName) {
                 return true;
             }
+        }
+        return false;
+    }
+    isExtend(className: string) {
+        if (this.parent == className || this.getFQNFromName(this.parent) == className) {
+            return true;
         }
         return false;
     }

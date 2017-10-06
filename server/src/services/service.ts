@@ -5,18 +5,33 @@ export const containerCompleteClass = {
     containerBuilder: 'Symfony\\Component\\DependencyInjection\\ContainerBuilder',
     decorator: 'Symfony\\Component\\DependencyInjection\\DefinitionDecorator',
     definition: 'Symfony\\Component\\DependencyInjection\\Definition',
-    reference: 'Symfony\\Component\\DependencyInjection\\Reference'
+    reference: 'Symfony\\Component\\DependencyInjection\\Reference',
+    containerCommand: 'Symfony\\Bundle\\FrameworkBundle\\Command\\ContainerAwareCommand',
+}
+
+export const containerCalls = {
+    get: 'get',
+    getContainer: 'getContainer',
+    getParameter: 'getParameter',
+    getDefinition: 'getDefinition',
+    hasDefinition: 'hasDefinition',
 }
 export class Services {
     services: ServicesHash;
     parameters: ParametersHash;
     pathServices: PathDepsHash;
     pathParameters: PathDepsHash;
+    autoconfigure: Array<Autoconfigure>
     constructor() {
         this.services = {};
         this.parameters = {};
         this.pathServices = {};
         this.pathParameters = {};
+        this.autoconfigure = new Array<Autoconfigure>();
+    }
+    addAutoconfigure(autoconfigure: Autoconfigure) {
+        this.autoconfigure.push(autoconfigure);
+
     }
     addService(key, service: Service, path?: string) {
         if (path) {
@@ -98,21 +113,6 @@ export class Services {
         return service;
     }
 }
-
-interface ServicesHash {
-    [id: string]: Service
-}
-
-interface ParametersHash {
-    [id: string]: string
-}
-interface PathDepsHash {
-    [id: string]: Array<string>
-}
-
-interface TagHash {
-    [id: string]: Tag
-}
 export class Tag {
     name: string
     attributes: ParametersHash
@@ -124,15 +124,41 @@ export class Tag {
         this.attributes[key] = value;
     }
 }
+export class Autoconfigure {
+    key: string
+    resource: string
+    exclude: string
+    isPublic: boolean
+    tags: TagHash
+    constructor(key: string, resource: string) {
+        this.key = key;
+        this.resource = resource;
+        this.isPublic = true;
+        this.tags = {};
+    }
+    setExclude(pattern: string) {
+        this.exclude = pattern;
+    }
+    addTags(tags) {
+        Object.keys(tags).forEach(tag => {
+            this.tags[tags[tag]['name']] = tags[tag]
+        });
+    }
+    private() {
+        this.isPublic = false;  
+    }
+}
 
 export class Service {
-    arguments: Array<Argument>;
+    arguments: Array<Argument>
     id: string
     class: string
     tags: TagHash
     isAbstract: boolean
     start: Position
     path: string
+    public: boolean
+    autoconfigure: Array<Autoconfigure>
 
     constructor(id: string, className: string, start: Position, path: string) {
         this.id = id;
@@ -142,6 +168,7 @@ export class Service {
         this.start = start;
         this.tags = {};
         this.path = path;
+        this.public = true;
     }
     addArgument(key: number, argument: Argument) {
         this.arguments[key] = argument;
@@ -170,6 +197,9 @@ export class Service {
     getClass() {
         return this.class;
     }
+    private() {
+        this.public = false;
+    }
 }
 
 export class ServiceArgument implements Argument {
@@ -187,8 +217,8 @@ export class TextArgument implements Argument {
 }
 
 export class ParameterArgument implements Argument {
-    value: String
-    constructor(value: String) {
+    value: String|boolean
+    constructor(value: String|boolean) {
         this.value = value;
     }
 }
@@ -201,4 +231,19 @@ export class CollectionArgument implements Argument {
 }
 
 export interface Argument {
+}
+
+interface ServicesHash {
+    [id: string]: Service
+}
+
+interface ParametersHash {
+    [id: string]: string
+}
+interface PathDepsHash {
+    [id: string]: Array<string>
+}
+
+interface TagHash {
+    [id: string]: Tag
 }

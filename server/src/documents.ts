@@ -74,7 +74,6 @@ export class ExtensionTextDocument implements TextDocument {
     }
 
     lineAt(lineOrPosition: Position): string {
-
         let line: number;
         line = lineOrPosition.line;
 

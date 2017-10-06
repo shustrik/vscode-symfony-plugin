@@ -18,13 +18,14 @@
         "@types/node": "^6.0.79",
         "mocha": "^2.3.3",
         "typescript": "^2.4.1",
-        "vscode": "^1.1.1"
+        "vscode": "^1.1.5"
     },
     "dependencies": {
+        "js-yaml": "^3.10.0",
         "php-parser": "^2.0.3",
-        "vscode": "^1.1.1",
         "vscode-languageserver": "^3.1.0",
         "xml-js": "^1.2.2",
-        "yaml-js": "^0.1.5"
+        "yaml-js": "^0.1.5",
+        "yamljs": "^0.3.0"
     }
 }

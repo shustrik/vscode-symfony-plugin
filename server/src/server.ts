@@ -62,25 +62,29 @@ connection.onRequest(deleteFile, (params) => {
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
 	return waitHandler(() => {
-		let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-		let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-		if (extension == 'php') {
-			return completion.provideCompletionPHPItems(
-				documentStore.get(fileName),
-				textDocumentPosition.position);
-		}
-		if (extension == 'yml' || extension == 'yaml') {
-			return completion.provideCompletionYAMLItems(
-				documentStore.get(fileName),
-				textDocumentPosition.position);
-		}
-		if (extension == 'xml') {
-			return completion.provideCompletionXMLItems(
-				documentStore.get(fileName),
-				textDocumentPosition.position);
-		}
+		try {
+			let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+			let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+			if (extension == 'php') {
+				return completion.provideCompletionPHPItems(
+					documentStore.get(fileName),
+					textDocumentPosition.position);
+			}
+			if (extension == 'yml' || extension == 'yaml') {
+				return completion.provideCompletionYAMLItems(
+					documentStore.get(fileName),
+					textDocumentPosition.position);
+			}
+			if (extension == 'xml') {
+				return completion.provideCompletionXMLItems(
+					documentStore.get(fileName),
+					textDocumentPosition.position);
+			}
 
-		return [];
+			return [];
+		} catch (e) {
+			console.error(e);
+		}
 	});
 });
 
@@ -89,20 +93,24 @@ connection.onWorkspaceSymbol((params) => {
 });
 
 connection.onDefinition((textDocumentPosition: TextDocumentPositionParams): Definition => {
-	let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-	let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-	let result = null;
-	if (extension == 'php') {
-		result = definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position)
-	}
-	if (extension == 'yml' || extension == 'yaml') {
-		result = definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position)
-	}
-	if (extension == 'xml') {
-		result = definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position)
-	}
+	try {
+		let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+		let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+		let result = null;
+		if (extension == 'php') {
+			result = definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position)
+		}
+		if (extension == 'yml' || extension == 'yaml') {
+			result = definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position)
+		}
+		if (extension == 'xml') {
+			result = definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position)
+		}
 
-	return result;
+		return result;
+	} catch (e) {
+		console.error(e);
+	}
 });
 
 connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {

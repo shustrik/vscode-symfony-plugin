@@ -42,16 +42,12 @@ export function activate(context: ExtensionContext) {
 	let ymlWatcher = workspace.createFileSystemWatcher('**/*.yml');
 	phpWatcher.onDidDelete(onDidDelete);
 	phpWatcher.onDidCreate(onDidCreate);
-	// phpWatcher.onDidChange(onDidChange);
 	xmlWatcher.onDidDelete(onDidDelete);
 	xmlWatcher.onDidCreate(onDidCreate);
-	// xmlWatcher.onDidChange(onDidChange);
 	yamlWatcher.onDidDelete(onDidDelete);
 	yamlWatcher.onDidCreate(onDidCreate);
-	// yamlWatcher.onDidChange(onDidChange);
 	ymlWatcher.onDidDelete(onDidDelete);
 	ymlWatcher.onDidCreate(onDidCreate);
-	// ymlWatcher.onDidChange(onDidChange);
 
 	let ready = languageClient.onReady();
 
@@ -162,7 +158,7 @@ function proccessFile(
 			return;
 		}
 		try {
-			callback(uri);
+			callback(uri, onSuccess);
 		} catch (e) {
 			onFailure();
 			return;
@@ -190,9 +186,3 @@ function onDidCreate(uri: vscode.Uri) {
 		{ text: fs.readFileSync(uri.fsPath, 'utf8'), path: uri.fsPath }
 	);
 }
-// function onDidChange(uri: vscode.Uri) {
-//     languageClient.sendRequest(
-// 		"changeFile",
-// 		{ text: fs.readFileSync(uri.fsPath, 'utf8'), path: uri.fsPath }
-// 	);
-// }

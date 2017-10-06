@@ -23,8 +23,8 @@
     "dependencies": {
         "php-parser": "^2.0.3",
         "vscode": "^1.1.1",
-        "vscode-languageserver": "^3.1.0",
+        "vscode-languageserver": "^3.3.0",
         "xml-js": "^1.2.2",
-        "yaml-js": "^0.1.5"
+        "yamljs": "^0.3.0"
     }
 }

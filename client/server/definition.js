@@ -25,7 +25,9 @@ class DefinitionProvider {
         let service = this.services.getService(currentWord);
         if (service) {
             let classDeclaration = this.classStorage.getClassByName(service.getClass());
-            return vscode_languageserver_1.Location.create('file://' + classDeclaration.getPath(), classDeclaration.getClassRange());
+            if (classDeclaration) {
+                return vscode_languageserver_1.Location.create('file://' + classDeclaration.getPath(), classDeclaration.getClassRange());
+            }
         }
         return null;
     }

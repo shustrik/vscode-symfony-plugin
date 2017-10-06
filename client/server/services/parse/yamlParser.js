@@ -2,27 +2,49 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const service_1 = require("../service");
 const vscode_languageserver_1 = require("vscode-languageserver");
-const yml = require("yaml-js");
+var parser = require('yamljs');
 function parse(body, path, services) {
     try {
-        let parsed = yml.load(body);
-        if (parsed.services && parsed.services instanceof Object) {
+        var parsed = parser.parse(body);
+        // let parsed = yml.load(body);
+        if (parsed && parsed.services && parsed.services instanceof Object) {
             let serviceLines = parseServiceLines(body, parsed.services);
             services.addServices(parseServices(parsed.services, serviceLines, path), path);
         }
-        if (parsed.parameters && parsed.parameters instanceof Object) {
+        if (parsed && parsed.parameters && parsed.parameters instanceof Object) {
             services.addParameters(parseParameters(parsed.parameters), path);
         }
     }
     catch (e) {
+        console.log(e);
         console.log('error parse yaml:' + path);
     }
 }
 exports.parse = parse;
 function parseServices(services, serviceLines, path) {
     let parsedServices = [];
+    let defaults = {};
     for (var key of Object.keys(services)) {
+        if (key == '_defaults') {
+            defaults = services[key];
+            continue;
+        }
         let service = services[key];
+        if (key.charAt(key.length - 1) == "\\") {
+            if (defaults['autoconfigure']) {
+                let autoconfigure = new service_1.Autoconfigure(key, services['resource']);
+                if (service['exclude']) {
+                    autoconfigure.setExclude(service['exclude']);
+                }
+                if (service['public'] == false || (defaults['public'] == false && service['public'] != true)) {
+                    autoconfigure.private();
+                }
+                if (service['tags']) {
+                    autoconfigure.addTags(parseTags(service['tags']));
+                }
+            }
+            continue;
+        }
         if (service instanceof Object) {
             let position = vscode_languageserver_1.Position.create(0, 0);
             if (serviceLines[key]) {
@@ -70,6 +92,9 @@ function createArgument(argument) {
             args.push(createArgument(arg));
         }
         return new service_1.CollectionArgument(args);
+    }
+    if (typeof (argument) === "boolean") {
+        return new service_1.ParameterArgument(argument);
     }
     if (argument.includes('@')) {
         return new service_1.ServiceArgument(argument.substring(1));

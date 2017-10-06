@@ -7,7 +7,15 @@ exports.containerCompleteClass = {
     containerBuilder: 'Symfony\\Component\\DependencyInjection\\ContainerBuilder',
     decorator: 'Symfony\\Component\\DependencyInjection\\DefinitionDecorator',
     definition: 'Symfony\\Component\\DependencyInjection\\Definition',
-    reference: 'Symfony\\Component\\DependencyInjection\\Reference'
+    reference: 'Symfony\\Component\\DependencyInjection\\Reference',
+    containerCommand: 'Symfony\\Bundle\\FrameworkBundle\\Command\\ContainerAwareCommand',
+};
+exports.containerCalls = {
+    get: 'get',
+    getContainer: 'getContainer',
+    getParameter: 'getParameter',
+    getDefinition: 'getDefinition',
+    hasDefinition: 'hasDefinition',
 };
 class Services {
     constructor() {
@@ -15,6 +23,10 @@ class Services {
         this.parameters = {};
         this.pathServices = {};
         this.pathParameters = {};
+        this.autoconfigure = new Array();
+    }
+    addAutoconfigure(autoconfigure) {
+        this.autoconfigure.push(autoconfigure);
     }
     addService(key, service, path) {
         if (path) {
@@ -107,6 +119,26 @@ class Tag {
     }
 }
 exports.Tag = Tag;
+class Autoconfigure {
+    constructor(key, resource) {
+        this.key = key;
+        this.resource = resource;
+        this.isPublic = true;
+        this.tags = {};
+    }
+    setExclude(pattern) {
+        this.exclude = pattern;
+    }
+    addTags(tags) {
+        Object.keys(tags).forEach(tag => {
+            this.tags[tags[tag]['name']] = tags[tag];
+        });
+    }
+    private() {
+        this.isPublic = false;
+    }
+}
+exports.Autoconfigure = Autoconfigure;
 class Service {
     constructor(id, className, start, path) {
         this.id = id;
@@ -116,6 +148,7 @@ class Service {
         this.start = start;
         this.tags = {};
         this.path = path;
+        this.public = true;
     }
     addArgument(key, argument) {
         this.arguments[key] = argument;
@@ -142,6 +175,9 @@ class Service {
     }
     getClass() {
         return this.class;
+    }
+    private() {
+        this.public = false;
     }
 }
 exports.Service = Service;

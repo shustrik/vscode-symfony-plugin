@@ -72,7 +72,7 @@ function findService(classStorage, classDeclaration, currentWord, node, parent) 
                     let containerInterfaceClass = classDeclaration;
                     while (containerInterfaceClass) {
                         if (containerInterfaceClass.hasInterface(services.containerCompleteClass.controllerContainer)) {
-                            if (parent.kind == 'call' && parent.what.offset.name == currentWord && node.what.arguments[0].kind === 'string') {
+                            if (parent && parent.kind == 'call' && parent.what.offset.name == currentWord && node.what.arguments[0].kind === 'string') {
                                 return node.what.arguments[0].value;
                             }
                         }
@@ -80,12 +80,23 @@ function findService(classStorage, classDeclaration, currentWord, node, parent) 
                     }
                 }
             }
+            if (node.offset.name == 'get' && node.what && node.what.what && node.what.what.offset.name == "getContainer") {
+                let containerInterfaceClass = classDeclaration;
+                while (containerInterfaceClass) {
+                    if (containerInterfaceClass.isExtend(services.containerCompleteClass.containerCommand)) {
+                        if (parent && parent.kind == 'call' && parent.what.offset.name == 'get' && parent.arguments[0].kind === 'string') {
+                            return parent.arguments[0].value;
+                        }
+                    }
+                    containerInterfaceClass = classStorage.getClassByName(containerInterfaceClass.getParent());
+                }
+            }
         }
     }
     return false;
 }
 function isServiceConditions(classStorage, classDeclaration, position, currentWord, node, parent) {
-    if (node.kind == 'new' &&
+    if (node.kind == 'new' && node.what &&
         conteinerCompletionType(classDeclaration.getFQNFromName(node.what.name)) &&
         node.arguments.length > 0) {
         let arg = node.arguments[0];
@@ -110,13 +121,24 @@ function isServiceConditions(classStorage, classDeclaration, position, currentWo
             if (node.offset.name == 'get') {
                 let containerInterfaceClass = classDeclaration;
                 while (containerInterfaceClass) {
-                    if (containerInterfaceClass.hasInterface(services.containerCompleteClass.controllerContainer)) {
+                    if (containerInterfaceClass.isExtend(services.containerCompleteClass.controllerContainer)) {
                         if (parent && parent.arguments && parent.arguments[0].kind == 'string' && parent.arguments[0].value == currentWord) {
                             return true;
                         }
                     }
                     containerInterfaceClass = classStorage.getClassByName(containerInterfaceClass.getParent());
                 }
+            }
+        }
+        if (node.what.kind == 'call' && node.offset.name == 'get' && node.what && node.what.what && node.what.what.offset.name == "getContainer") {
+            let containerInterfaceClass = classDeclaration;
+            while (containerInterfaceClass) {
+                if (containerInterfaceClass.isExtend(services.containerCompleteClass.containerCommand)) {
+                    if (parent && parent.arguments && parent.arguments[0].kind == 'string' && parent.arguments[0].value == currentWord) {
+                        return true;
+                    }
+                }
+                containerInterfaceClass = classStorage.getClassByName(containerInterfaceClass.getParent());
             }
         }
     }
