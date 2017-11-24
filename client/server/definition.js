@@ -20,7 +20,10 @@ class DefinitionProvider {
         let classDeclaration = this.classStorage.getClassByName(currentWord);
         if (classDeclaration && classDeclaration.getPath() == document.getUri()) {
             let service = this.services.getServiceByClass(classDeclaration.getFqnName());
-            return vscode_languageserver_1.Location.create('file://' + service.getPath(), service.getRange());
+            if (service) {
+                return vscode_languageserver_1.Location.create('file://' + service.getPath(), service.getRange());
+            }
+            return null;
         }
         let service = this.services.getService(currentWord);
         if (service) {

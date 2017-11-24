@@ -20,6 +20,9 @@ exports.parseEval = parseEval;
 function parse(code, path, classStorage) {
     let classDeclaration = new phpStructure_1.ClassDeclaration(path);
     let ast = parserInst.parseCode(code);
+    if (ast.errors.length > 0) {
+        return;
+    }
     branchProcess(ast, classDeclaration);
     classStorage.add(path, classDeclaration);
 }

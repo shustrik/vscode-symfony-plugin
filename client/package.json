@@ -1,63 +1,68 @@
 {
-    "name": "vscode-symfony-client",
-    "displayName": "Symfony",
-    "description": "Service Completion",
-    "author": {
-        "name": "Vadim Golodko",
-        "email": "vadim.golodko@gmail.com"
-    },
-    "license": "ISC",
-    "version": "0.1.0",
-    "publisher": "shustrik",
-    "engines": {
-        "vscode": "^1.11.0"
-    },
-    "categories": [
-        "Languages"
-    ],
-    "preview": false,
-    "activationEvents": [
-        "onLanguage:php",
-        "onLanguage:yaml",
-        "onLanguage:xml"
-    ],
-    "keywords": [
-        "php",
-        "symfony",
-        "completion",
-        "help"
-    ],
-    "bugs": {
-        "url": "https://github.com/shustrik/vscode-symfony-plugin/issues"
-    },
-    "homepage": "https://github.com/shustrik/vscode-symfony-plugin",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/shustrik/vscode-symfony-plugin"
-    },
-    "main": "./out/extension",
-    "contributes": {
-        "languages": [
-            {
-                "id": "php"
-            }
-        ]
-    },
-    "scripts": {
-        "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
-        "update-vscode": "node ./node_modules/vscode/bin/install",
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    },
-    "devDependencies": {
-        "@types/mocha": "^2.2.40",
-        "@types/node": "^6.0.52",
-        "typescript": "^2.3.4",
-        "vscode": "^1.1.0"
-    },
-    "dependencies": {
-        "vscode-languageclient": "^3.1.0",
-        "mkdirp": "^0.5.1"
-    },
-    "private": true
+	"name": "vscode-symfony-client",
+	"displayName": "Symfony",
+	"description": "Service Completion",
+	"author": {
+		"name": "Vadim Golodko",
+		"email": "vadim.golodko@gmail.com"
+	},
+	"license": "ISC",
+	"version": "0.1.0",
+	"publisher": "shustrik",
+	"engines": {
+		"vscode": "^1.11.0"
+	},
+	"categories": [
+		"Languages"
+	],
+	"preview": false,
+	"activationEvents": [
+		"onLanguage:php",
+		"onLanguage:yaml",
+		"onLanguage:xml"
+	],
+	"keywords": [
+		"php",
+		"symfony",
+		"completion",
+		"help"
+	],
+	"bugs": {
+		"url": "https://github.com/shustrik/vscode-symfony-plugin/issues"
+	},
+	"homepage": "https://github.com/shustrik/vscode-symfony-plugin",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/shustrik/vscode-symfony-plugin"
+	},
+	"main": "./out/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "php"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "tsc -p ./",
+		"compile": "tsc -watch -p ./",
+		"update-vscode": "node ./node_modules/vscode/bin/install",
+		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"devDependencies": {
+		"@types/mocha": "^2.2.40",
+		"@types/node": "^6.0.52",
+		"typescript": "^2.3.4",
+		"vscode": "^1.1.0"
+	},
+	"dependencies": {
+		"vscode-languageclient": "^3.1.0",
+		"mkdirp": "^0.5.1"
+	},
+	"private": true,
+	"__metadata": {
+		"id": "fdc88afe-a3b7-4b3b-a39b-aa2ee7dac639",
+		"publisherDisplayName": "shustrik",
+		"publisherId": "dc440005-5f59-4f3d-af95-afa1cf5aeac4"
+	}
 }

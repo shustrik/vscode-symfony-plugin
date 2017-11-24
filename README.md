@@ -1,1 +1,1 @@
-Symfony plugin for vscode. Main README in server folder
+Symfony plugin for vscode. Main README in client folder

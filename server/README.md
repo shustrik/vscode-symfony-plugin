@@ -1,8 +1,3 @@
-# symfony README
-Alfa version extension for symfony. Extension provide service completion and services method completion.
-
-If vendor folder excluded - symfony services not provide
-
 ## Features
 * Parse YAML, XML service configuration file
 * Parse DependencyInjection Configuration file

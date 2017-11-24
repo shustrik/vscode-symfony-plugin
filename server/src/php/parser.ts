@@ -18,6 +18,9 @@ export function parseEval(text: string) {
 export function parse(code, path: string, classStorage: ClassStorage) {
     let classDeclaration = new ClassDeclaration(path);
     let ast = parserInst.parseCode(code);
+    if (ast.errors.length > 0) {
+        return
+    }
     branchProcess(ast, classDeclaration);
     classStorage.add(path, classDeclaration);
 }
