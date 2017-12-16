@@ -3,7 +3,7 @@ import { Position } from 'vscode-languageserver';
 var parser = require('yamljs');
 export function parse(body: string, path: string, services: Services) {
     try {
-        var parsed= parser.parse(body);
+        var parsed = parser.parse(body);
         // let parsed = yml.load(body);
         if (parsed && parsed.services && parsed.services instanceof Object) {
             let serviceLines = parseServiceLines(body, parsed.services);
@@ -79,7 +79,9 @@ function parseArguments(serviceArguments): Array<Argument> {
         return [];
     }
     for (let arg of serviceArguments) {
-        parsedArguments.push(createArgument(arg));
+        if (arg) {
+            parsedArguments.push(createArgument(arg));
+        }
     }
     return parsedArguments;
 }
@@ -92,8 +94,8 @@ function createArgument(argument): Argument {
         }
         return new CollectionArgument(args);
     }
-    if(typeof(argument) === "boolean"){
-        return new ParameterArgument(argument); 
+    if (typeof (argument) === "boolean") {
+        return new ParameterArgument(argument);
     }
     if (argument.includes('@')) {
         return new ServiceArgument(argument.substring(1));

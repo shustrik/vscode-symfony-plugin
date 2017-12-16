@@ -107,6 +107,9 @@ function isServiceConditions(classStorage: ClassStorage, classDeclaration: Class
     if (node.kind == 'propertylookup') {
         if (node.what.kind == 'variable') {
             let func = classDeclaration.findMethodByLine(position.line);
+            if(!func){
+                return false;
+            }
             let type = func.getVariable(node.what.name);
             if (type) {
                 let fqn = classDeclaration.getFQNFromName(type.getType());

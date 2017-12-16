@@ -81,7 +81,9 @@ function parseArguments(serviceArguments) {
         return [];
     }
     for (let arg of serviceArguments) {
-        parsedArguments.push(createArgument(arg));
+        if (arg) {
+            parsedArguments.push(createArgument(arg));
+        }
     }
     return parsedArguments;
 }
