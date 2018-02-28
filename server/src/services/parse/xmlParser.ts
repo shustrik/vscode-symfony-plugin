@@ -2,19 +2,14 @@ import { Services, Service, Tag, ServiceArgument, TextArgument, ParameterArgumen
 import { Position } from 'vscode-languageserver';
 import * as xml from 'xml-js';
 export function parse(body: string, path: string, services: Services) {
-    try {
-        let parsed = xml.xml2js(body, { compact: true });
-        if (parsed.container && parsed.container instanceof Object) {
-            if (parsed.container.services) {
-                services.addServices(parseServices(parsed.container.services, parseServiceLines(body), path), path);
-            }
-            if (parsed.container.parameters) {
-                services.addParameters(parseParameters(parsed.container.parameters), path);
-            }
+    let parsed = xml.xml2js(body, { compact: true });
+    if (parsed.container && parsed.container instanceof Object) {
+        if (parsed.container.services) {
+            services.addServices(parseServices(parsed.container.services, parseServiceLines(body), path), path);
         }
-    } catch (e) {
-        console.log(e);
-        console.log('error parse xml:' + path);
+        if (parsed.container.parameters) {
+            services.addParameters(parseParameters(parsed.container.parameters), path);
+        }
     }
 }
 function parseTags(tag) {

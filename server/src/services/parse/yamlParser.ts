@@ -2,19 +2,14 @@ import { Services, Service, Tag, ServiceArgument, TextArgument, ParameterArgumen
 import { Position } from 'vscode-languageserver';
 var parser = require('yamljs');
 export function parse(body: string, path: string, services: Services) {
-    try {
-        var parsed = parser.parse(body);
-        // let parsed = yml.load(body);
-        if (parsed && parsed.services && parsed.services instanceof Object) {
-            let serviceLines = parseServiceLines(body, parsed.services);
-            services.addServices(parseServices(parsed.services, serviceLines, path), path);
-        }
-        if (parsed && parsed.parameters && parsed.parameters instanceof Object) {
-            services.addParameters(parseParameters(parsed.parameters), path);
-        }
-    } catch (e) {
-        console.log(e);
-        console.log('error parse yaml:' + path);
+    var parsed = parser.parse(body);
+    // let parsed = yml.load(body);
+    if (parsed && parsed.services && parsed.services instanceof Object) {
+        let serviceLines = parseServiceLines(body, parsed.services);
+        services.addServices(parseServices(parsed.services, serviceLines, path), path);
+    }
+    if (parsed && parsed.parameters && parsed.parameters instanceof Object) {
+        services.addParameters(parseParameters(parsed.parameters), path);
     }
 }
 function parseServices(services: Services, serviceLines: { [id: string]: number }, path: string) {

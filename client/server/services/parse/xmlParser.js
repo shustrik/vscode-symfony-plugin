@@ -4,20 +4,14 @@ const service_1 = require("../service");
 const vscode_languageserver_1 = require("vscode-languageserver");
 const xml = require("xml-js");
 function parse(body, path, services) {
-    try {
-        let parsed = xml.xml2js(body, { compact: true });
-        if (parsed.container && parsed.container instanceof Object) {
-            if (parsed.container.services) {
-                services.addServices(parseServices(parsed.container.services, parseServiceLines(body), path), path);
-            }
-            if (parsed.container.parameters) {
-                services.addParameters(parseParameters(parsed.container.parameters), path);
-            }
+    let parsed = xml.xml2js(body, { compact: true });
+    if (parsed.container && parsed.container instanceof Object) {
+        if (parsed.container.services) {
+            services.addServices(parseServices(parsed.container.services, parseServiceLines(body), path), path);
         }
-    }
-    catch (e) {
-        console.log(e);
-        console.log('error parse xml:' + path);
+        if (parsed.container.parameters) {
+            services.addParameters(parseParameters(parsed.container.parameters), path);
+        }
     }
 }
 exports.parse = parse;

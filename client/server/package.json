@@ -18,12 +18,13 @@
         "@types/node": "^6.0.79",
         "mocha": "^2.3.3",
         "typescript": "^2.4.1",
-        "vscode": "^1.1.10"
+        "vscode": "^1.1.1"
     },
     "dependencies": {
-        "php-parser": "^2.1.0",
-        "vscode-languageserver": "^3.5.0",
-        "xml-js": "^1.5.2",
+        "php-parser": "^2.2.0",
+        "vscode": "^1.1.1",
+        "vscode-languageserver": "^3.3.0",
+        "xml-js": "^1.2.2",
         "yamljs": "^0.3.0"
     }
 }

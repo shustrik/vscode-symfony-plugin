@@ -1,4 +1,4 @@
-/* Copyright (c) Ben Robert Mewburn 
+/* Copyright (c) Ben Robert Mewburn
  * Licensed under the ISC Licence.
  */
 'use strict';
@@ -62,7 +62,11 @@ export function activate(context: ExtensionContext) {
 			});
 		}).then(() => {
 			readFiles(['*.php'], (uriArray: vscode.Uri[]) => {
-				onWorkspaceFindFiles(uriArray, parseFile, 'php')
+				new Promise((resolve, reject) => {
+					onWorkspaceFindFiles(uriArray, parseFile, 'php')
+					resolve();
+				}).then(() => { languageClient.info("test"); });
+
 			});
 		});
 	}
@@ -90,11 +94,16 @@ function readFiles(associations: Array<string>, callback) {
 }
 
 function onWorkspaceFindFiles(uriArray: vscode.Uri[], callable, type: string) {
-	languageClient.info('Parse files start: ' + type);
 	let fileCount = uriArray.length;
 	let remaining = fileCount;
 	let discoveredFileCount = 0;
 	let start = process.hrtime();
+	languageClient.info(
+		[
+			'Workspace files started : ' + type,
+			`${fileCount} files`
+		].join(' | ')
+	);
 	let nActive = 0;
 
 	uriArray = uriArray.reverse();
@@ -123,6 +132,11 @@ function onWorkspaceFindFiles(uriArray: vscode.Uri[], callable, type: string) {
 				`${discoveredFileCount}/${fileCount} files`,
 				`${elapsed[0]}.${Math.round(elapsed[1] / 1000000)} seconds`
 			].join(' | ')
+		);
+
+		languageClient.sendRequest(
+			"diagnosticInfo",
+			{}
 		);
 	}
 

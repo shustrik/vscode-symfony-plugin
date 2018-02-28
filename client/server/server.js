@@ -19,10 +19,17 @@ let documentStore;
 let completion;
 let definition;
 let waiter;
+let badPHPFiles;
+let badYamlFiles;
+let badXmlFiles;
 let connection = vscode_languageserver_1.createConnection(new vscode_languageserver_1.IPCMessageReader(process), new vscode_languageserver_1.IPCMessageWriter(process));
 const parseFile = new vscode_languageserver_1.RequestType('parseFile');
 const deleteFile = new vscode_languageserver_1.RequestType('deleteFile');
+const diagnosticInfo = new vscode_languageserver_1.RequestType('diagnosticInfo');
 connection.onInitialize((params) => {
+    badPHPFiles = new Array();
+    badYamlFiles = new Array();
+    badXmlFiles = new Array();
     services = new service_1.Services();
     classStorage = new phpStructure_1.ClassStorage();
     documentStore = new documents_1.DocumentStore();
@@ -46,6 +53,12 @@ connection.onRequest(parseFile, (params) => {
 connection.onRequest(deleteFile, (params) => {
     documentStore.remove(params.path);
     services.removePathDeps(params.path);
+});
+connection.onRequest(diagnosticInfo, () => {
+    connection.console.log("Founded " + services.getServicesIds().length + " services");
+    connection.console.log("Broken PHP files: " + badPHPFiles.length);
+    connection.console.log("Broken Yaml files: " + badYamlFiles.length);
+    connection.console.log("Broken XML files: " + badXmlFiles.length);
 });
 connection.onCompletion((textDocumentPosition) => {
     return waitHandler(() => {
@@ -103,17 +116,32 @@ function parseRequestFile(path, body) {
     if (extension == 'php') {
         let document = new documents_1.ExtensionTextDocument(body, path, 'php');
         documentStore.push(path, document);
-        php_parser.parse(body, path, classStorage);
+        try {
+            php_parser.parse(body, path, classStorage);
+        }
+        catch (e) {
+            badPHPFiles.push(path);
+        }
     }
     if (extension == 'yml' || extension == 'yaml') {
         let document = new documents_1.ExtensionTextDocument(body, path, 'yaml');
         documentStore.push(path, document);
-        yaml_parser.parse(body, path, services);
+        try {
+            let result = yaml_parser.parse(body, path, services);
+        }
+        catch (e) {
+            badYamlFiles.push(path);
+        }
     }
     if (extension == 'xml') {
         let document = new documents_1.ExtensionTextDocument(body, path, 'xml');
         documentStore.push(path, document);
-        xml_parser.parse(body, path, services);
+        try {
+            let result = xml_parser.parse(body, path, services);
+        }
+        catch (e) {
+            badXmlFiles.push(path);
+        }
     }
 }
 function waitHandler(callback) {

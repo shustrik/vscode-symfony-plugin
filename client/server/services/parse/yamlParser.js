@@ -4,20 +4,14 @@ const service_1 = require("../service");
 const vscode_languageserver_1 = require("vscode-languageserver");
 var parser = require('yamljs');
 function parse(body, path, services) {
-    try {
-        var parsed = parser.parse(body);
-        // let parsed = yml.load(body);
-        if (parsed && parsed.services && parsed.services instanceof Object) {
-            let serviceLines = parseServiceLines(body, parsed.services);
-            services.addServices(parseServices(parsed.services, serviceLines, path), path);
-        }
-        if (parsed && parsed.parameters && parsed.parameters instanceof Object) {
-            services.addParameters(parseParameters(parsed.parameters), path);
-        }
+    var parsed = parser.parse(body);
+    // let parsed = yml.load(body);
+    if (parsed && parsed.services && parsed.services instanceof Object) {
+        let serviceLines = parseServiceLines(body, parsed.services);
+        services.addServices(parseServices(parsed.services, serviceLines, path), path);
     }
-    catch (e) {
-        console.log(e);
-        console.log('error parse yaml:' + path);
+    if (parsed && parsed.parameters && parsed.parameters instanceof Object) {
+        services.addParameters(parseParameters(parsed.parameters), path);
     }
 }
 exports.parse = parse;
