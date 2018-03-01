@@ -1,5 +1,5 @@
 
-Now this plugin is alfa version. You can download extension from [link](https://marketplace.visualstudio.com/items?itemName=shustrik.vscode-symfony-client) and [install]( https://code.visualstudio.com/Docs/editor/extension-gallery#_install-from-a-vsix)
+Now this plugin is alfa version. You can download extension from [link](https://github.com/shustrik/vscode-symfony-plugin/raw/master/vscode-symfony-client-0.1.2.vsix) and [install]( https://code.visualstudio.com/Docs/editor/extension-gallery#_install-from-a-vsix)
 
 If you install extension please add a feedback(in [issue](https://github.com/shustrik/vscode-symfony-plugin/issues/2) or create issue with problem) I need it to plan the release
 
@@ -18,9 +18,8 @@ If vendor folder excluded - symfony services not provide
 ## Extension Settings
 
 ## Known Issues
-* Symfony 3.3 autoconfigure 
+* Symfony 3.3 autoconfigure
 * Split public and private services
 * Form completion helper
 * Parse php service configuration file
 * Tests
-
