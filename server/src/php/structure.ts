@@ -1,11 +1,59 @@
 import { Range, Position } from 'vscode-languageserver';
+export class ClassDescriptionBuilder {
+    name: string
+    variables: VariableStorage
+    functions: Array<ClassFunction>
+    namespace: string
+    using: Array<Use>
+    parent: string
+    isAbstract: boolean
+    interfaces: Array<String>
+    start: Position
+    end: Position
+    path: string
+    constructor(path: string) {
+        this.using = new Array<Use>();
+        this.interfaces = new Array<String>();
+        this.functions = new Array<ClassFunction>();
+        this.variables = {};
+    }
+    setPath(path: string) {
+        this.path = path;
+    }
+    setPosition(start: Position, end: Position) {
+        this.start = start;
+        this.end = end;
+    }
+    setNamespace(namespace: string) {
+        this.namespace = namespace;
+    }
+    setName(name: string) {
+        this.name = name;
+    }
+    setParent(parent: string) {
+        this.parent = parent;
+    }
+    setAbstract(abstract: boolean) {
+        this.isAbstract = abstract;
+    }
+    addInterface(name: string) {
+        this.interfaces.push(name);
+    }
+    setPositions(startLine: number, startCharacter: number, endLine: number, endCharacter: number) {
+        this.start = Position.create(startLine, startCharacter);
+        this.end = Position.create(endLine, endCharacter);
+    }
+    build(): ClassDescription {
+        return null;
+    }
+}
 export class ClassStorage {
     classes: ClassStorageType
     constructor() {
         this.classes = {};
     }
-    add(path: string, classDeclaration: ClassDeclaration) {
-        this.classes[path] = classDeclaration;
+    add(path: string, classDescription: ClassDescription) {
+        this.classes[path] = classDescription;
     }
     getFqnClasses() {
         let classes = [];
@@ -18,10 +66,10 @@ export class ClassStorage {
     }
     getClassByName(name) {
         for (let path in this.classes) {
-            let classDeclaration = this.classes[path];
-            if (classDeclaration.getName() &&
-                (classDeclaration.getName() == name || classDeclaration.getFqnName() == name)) {
-                return classDeclaration;
+            let classDescription = this.classes[path];
+            if (classDescription.getName() &&
+                (classDescription.getName() == name || classDescription.getFqnName() == name)) {
+                return classDescription;
             }
         }
         return null;
@@ -30,7 +78,7 @@ export class ClassStorage {
         return this.classes[fileName];
     }
 }
-export class ClassDeclaration {
+export class ClassDescription {
     name: string
     variables: VariableStorage
     functions: Array<ClassFunction>
@@ -38,8 +86,6 @@ export class ClassDeclaration {
     using: Array<Use>
     parent: string
     isAbstract: boolean
-    services: Array<String>
-    parameters: Array<String>
     interfaces: Array<String>
     start: Position
     end: Position
@@ -47,15 +93,9 @@ export class ClassDeclaration {
     constructor(path: string) {
         this.path = path;
         this.using = new Array<Use>();
-        this.parameters = new Array<String>();
         this.interfaces = new Array<String>();
-        this.services = new Array<String>();
         this.functions = new Array<ClassFunction>();
         this.variables = {};
-    }
-    setPosition(start: Position, end: Position) {
-        this.start = start;
-        this.end = end;
     }
     getClassRange() {
         return Range.create(this.start, this.end);
@@ -83,32 +123,16 @@ export class ClassDeclaration {
     getName() {
         return this.name;
     }
-    setNamespace(namespace: string) {
-        this.namespace = namespace;
-    }
+
     addUse(use: Use) {
         this.using.push(use);
     }
-    setName(name: string) {
-        this.name = name;
-    }
-    setParent(parent: string) {
-        this.parent = parent;
-    }
+
     addFunction(func: ClassFunction) {
         this.functions.push(func);
     }
     addVariable(variable: Variable) {
         this.variables[variable.getName()] = variable;
-    }
-    addService(service: string) {
-        this.services.push(service);
-    }
-    getServices() {
-        return this.services;
-    }
-    addParameter(parameter: string) {
-        this.parameters.push(parameter);
     }
     setPropertyType(name: string, type: string) {
         if (this.variables[name]) {
@@ -126,6 +150,15 @@ export class ClassDeclaration {
     getPublicFunctions() {
         return this.functions;
     }
+    getFunctionByName(name: string) {
+        for (var index = 0; index < this.functions.length; index++) {
+            var func = this.functions[index];
+            if (func.getName() === name) {
+                return func;
+            }
+        }
+        return null;
+    }
     findMethodByLine(line: number) {
         for (var index = 0; index < this.functions.length; index++) {
             var element = this.functions[index];
@@ -140,9 +173,6 @@ export class ClassDeclaration {
     }
     getPath() {
         return this.path;
-    }
-    abstract() {
-        this.isAbstract = true;
     }
 }
 export class ClassFunction {
@@ -232,5 +262,5 @@ interface VariableStorage {
     [id: string]: Variable
 }
 interface ClassStorageType {
-    [id: string]: ClassDeclaration
+    [id: string]: ClassDescription
 }

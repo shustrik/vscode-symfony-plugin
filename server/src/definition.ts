@@ -9,7 +9,7 @@
 import { CompletionItem, TextDocument, Position, Range, Definition, Location } from 'vscode-languageserver';
 import { Services } from './services/service';
 import { dirname, basename } from 'path';
-import { ClassStorage } from './php/phpStructure';
+import { ClassStorage } from './php/structure';
 import { ExtensionTextDocument } from './documents';
 
 export class DefinitionProvider {

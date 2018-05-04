@@ -64,7 +64,7 @@ class CompletionProvider {
         }
         let prevLineNumber = 1;
         while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
-            //проблемная регулярка
+            //bad regular expression
             if (lineText.match(/^(\s)*arguments:+/)) {
                 if (currentWord.includes('@')) {
                     return this.serviceArgumentCompletion(this.services, currentWord.substring(1));

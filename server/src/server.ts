@@ -15,9 +15,9 @@ import { Services } from './services/service';
 import { DocumentStore, ExtensionTextDocument } from './documents';
 import * as fs from 'fs';
 import * as php_parser from './php/parser';
-import * as xml_parser from './services/parse/xmlParser';
-import * as yaml_parser from './services/parse/yamlParser';
-import { ClassStorage } from './php/phpStructure'
+import * as xml_parser from './services/parse/xml';
+import * as yaml_parser from './services/parse/yaml';
+import { ClassStorage } from './php/structure'
 
 let maxFileSizeBytes = 10000000;
 let discoverMaxOpenFiles = 100;
@@ -76,29 +76,25 @@ connection.onRequest(diagnosticInfo, () => {
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
 	return waitHandler(() => {
-		try {
-			let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-			let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-			if (extension == 'php') {
-				return completion.provideCompletionPHPItems(
-					documentStore.get(fileName),
-					textDocumentPosition.position);
-			}
-			if (extension == 'yml' || extension == 'yaml') {
-				return completion.provideCompletionYAMLItems(
-					documentStore.get(fileName),
-					textDocumentPosition.position);
-			}
-			if (extension == 'xml') {
-				return completion.provideCompletionXMLItems(
-					documentStore.get(fileName),
-					textDocumentPosition.position);
-			}
-
-			return [];
-		} catch (e) {
-			console.error(e);
+		let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+		let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+		if (extension == 'php') {
+			return completion.provideCompletionPHPItems(
+				documentStore.get(fileName),
+				textDocumentPosition.position);
 		}
+		if (extension == 'yml' || extension == 'yaml') {
+			return completion.provideCompletionYAMLItems(
+				documentStore.get(fileName),
+				textDocumentPosition.position);
+		}
+		if (extension == 'xml') {
+			return completion.provideCompletionXMLItems(
+				documentStore.get(fileName),
+				textDocumentPosition.position);
+		}
+
+		return null;
 	});
 });
 
@@ -107,24 +103,19 @@ connection.onWorkspaceSymbol((params) => {
 });
 
 connection.onDefinition((textDocumentPosition: TextDocumentPositionParams): Definition => {
-	try {
-		let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-		let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-		let result = null;
-		if (extension == 'php') {
-			result = definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position)
-		}
-		if (extension == 'yml' || extension == 'yaml') {
-			result = definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position)
-		}
-		if (extension == 'xml') {
-			result = definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position)
-		}
-
-		return result;
-	} catch (e) {
-		console.error(e);
+	let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+	let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+	if (extension == 'php') {
+		return definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position)
 	}
+	if (extension == 'yml' || extension == 'yaml') {
+		return definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position)
+	}
+	if (extension == 'xml') {
+		return definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position)
+	}
+
+	return null;
 });
 
 connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
@@ -141,7 +132,7 @@ function parseRequestFile(path: string, body: string) {
 		let document = new ExtensionTextDocument(body, path, 'php')
 		documentStore.push(path, document);
 		try {
-			php_parser.parse(body, path, classStorage);
+			php_parser.parse(body, path, classStorage, services);
 		} catch (e) {
 			badPHPFiles.push(path);
 		}

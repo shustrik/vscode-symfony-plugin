@@ -145,7 +145,7 @@ export class Autoconfigure {
         });
     }
     private() {
-        this.isPublic = false;  
+        this.isPublic = false;
     }
 }
 
@@ -217,8 +217,8 @@ export class TextArgument implements Argument {
 }
 
 export class ParameterArgument implements Argument {
-    value: String|boolean
-    constructor(value: String|boolean) {
+    value: String | boolean
+    constructor(value: String | boolean) {
         this.value = value;
     }
 }

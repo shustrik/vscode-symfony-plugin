@@ -8,9 +8,9 @@ const definition_1 = require("./definition");
 const service_1 = require("./services/service");
 const documents_1 = require("./documents");
 const php_parser = require("./php/parser");
-const xml_parser = require("./services/parse/xmlParser");
-const yaml_parser = require("./services/parse/yamlParser");
-const phpStructure_1 = require("./php/phpStructure");
+const xml_parser = require("./services/parse/xml");
+const yaml_parser = require("./services/parse/yaml");
+const structure_1 = require("./php/structure");
 let maxFileSizeBytes = 10000000;
 let discoverMaxOpenFiles = 100;
 let services;
@@ -31,7 +31,7 @@ connection.onInitialize((params) => {
     badYamlFiles = new Array();
     badXmlFiles = new Array();
     services = new service_1.Services();
-    classStorage = new phpStructure_1.ClassStorage();
+    classStorage = new structure_1.ClassStorage();
     documentStore = new documents_1.DocumentStore();
     completion = new completion_1.CompletionProvider(services, classStorage);
     definition = new definition_1.DefinitionProvider(services, classStorage);
@@ -62,47 +62,36 @@ connection.onRequest(diagnosticInfo, () => {
 });
 connection.onCompletion((textDocumentPosition) => {
     return waitHandler(() => {
-        try {
-            let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-            let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-            if (extension == 'php') {
-                return completion.provideCompletionPHPItems(documentStore.get(fileName), textDocumentPosition.position);
-            }
-            if (extension == 'yml' || extension == 'yaml') {
-                return completion.provideCompletionYAMLItems(documentStore.get(fileName), textDocumentPosition.position);
-            }
-            if (extension == 'xml') {
-                return completion.provideCompletionXMLItems(documentStore.get(fileName), textDocumentPosition.position);
-            }
-            return [];
+        let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+        let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+        if (extension == 'php') {
+            return completion.provideCompletionPHPItems(documentStore.get(fileName), textDocumentPosition.position);
         }
-        catch (e) {
-            console.error(e);
+        if (extension == 'yml' || extension == 'yaml') {
+            return completion.provideCompletionYAMLItems(documentStore.get(fileName), textDocumentPosition.position);
         }
+        if (extension == 'xml') {
+            return completion.provideCompletionXMLItems(documentStore.get(fileName), textDocumentPosition.position);
+        }
+        return null;
     });
 });
 connection.onWorkspaceSymbol((params) => {
     return [];
 });
 connection.onDefinition((textDocumentPosition) => {
-    try {
-        let extension = textDocumentPosition.textDocument.uri.split('.').pop();
-        let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
-        let result = null;
-        if (extension == 'php') {
-            result = definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position);
-        }
-        if (extension == 'yml' || extension == 'yaml') {
-            result = definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position);
-        }
-        if (extension == 'xml') {
-            result = definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position);
-        }
-        return result;
+    let extension = textDocumentPosition.textDocument.uri.split('.').pop();
+    let fileName = textDocumentPosition.textDocument.uri.replace("file://", "");
+    if (extension == 'php') {
+        return definition.providePHPDefinition(documentStore.get(fileName), textDocumentPosition.position);
     }
-    catch (e) {
-        console.error(e);
+    if (extension == 'yml' || extension == 'yaml') {
+        return definition.provideYamlDefinition(documentStore.get(fileName), textDocumentPosition.position);
     }
+    if (extension == 'xml') {
+        return definition.provideXmlDefinition(documentStore.get(fileName), textDocumentPosition.position);
+    }
+    return null;
 });
 connection.onDidChangeTextDocument((params) => {
     return waitHandler(() => {
@@ -117,7 +106,7 @@ function parseRequestFile(path, body) {
         let document = new documents_1.ExtensionTextDocument(body, path, 'php');
         documentStore.push(path, document);
         try {
-            php_parser.parse(body, path, classStorage);
+            php_parser.parse(body, path, classStorage, services);
         }
         catch (e) {
             badPHPFiles.push(path);

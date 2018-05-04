@@ -1,7 +1,7 @@
 import { CompletionItem, CompletionItemKind, TextDocument, Position, Range } from 'vscode-languageserver';
 import { Services } from './services/service';
 import { dirname, basename } from 'path';
-import { ClassStorage } from './php/phpStructure';
+import { ClassStorage } from './php/structure';
 import * as helper from './php/completionHelper';
 import { ExtensionTextDocument } from './documents';
 import * as completion from './completion';
@@ -74,7 +74,7 @@ export class CompletionProvider {
         }
         let prevLineNumber = 1;
         while (!lineText.match(/^(\s)*(class:)(\s)+/)) {
-            //проблемная регулярка
+            //bad regular expression
             if (lineText.match(/^(\s)*arguments:+/)) {
                 if (currentWord.includes('@')) {
                     return this.serviceArgumentCompletion(this.services, currentWord.substring(1));

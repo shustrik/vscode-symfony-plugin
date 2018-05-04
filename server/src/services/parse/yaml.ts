@@ -3,17 +3,15 @@ import { Position } from 'vscode-languageserver';
 var parser = require('yamljs');
 export function parse(body: string, path: string, services: Services) {
     var parsed = parser.parse(body);
-    // let parsed = yml.load(body);
     if (parsed && parsed.services && parsed.services instanceof Object) {
         let serviceLines = parseServiceLines(body, parsed.services);
-        services.addServices(parseServices(parsed.services, serviceLines, path), path);
+        parseServices(services, parsed.services, serviceLines, path);
     }
     if (parsed && parsed.parameters && parsed.parameters instanceof Object) {
-        services.addParameters(parseParameters(parsed.parameters), path);
+        services.addParameters(parsed.parameters);
     }
 }
-function parseServices(services: Services, serviceLines: { [id: string]: number }, path: string) {
-    let parsedServices = [];
+function parseServices(services: Services, parsedLines, serviceLines: { [id: string]: number }, path: string) {
     let defaults = {};
     for (var key of Object.keys(services)) {
         if (key == '_defaults') {
@@ -33,6 +31,7 @@ function parseServices(services: Services, serviceLines: { [id: string]: number 
                 if (service['tags']) {
                     autoconfigure.addTags(parseTags(service['tags']));
                 }
+                services.addAutoconfigure(autoconfigure);
             }
             continue;
         }
@@ -45,10 +44,9 @@ function parseServices(services: Services, serviceLines: { [id: string]: number 
             let parsedService = new Service(key, className, position, path);
             parsedService.addArguments(parseArguments(service['arguments']));
             parsedService.addTags(parseTags(service['tags']));
-            parsedServices.push(parsedService);
+            services.addService(key, parsedService, path);
         }
     }
-    return parsedServices;
 }
 function parseTags(tags: Array<{}>) {
     let result = {};
@@ -63,9 +61,6 @@ function parseTags(tags: Array<{}>) {
 
     });
     return result;
-}
-function parseParameters(parameters) {
-    return parameters;
 }
 
 function parseArguments(serviceArguments): Array<Argument> {

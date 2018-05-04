@@ -1,4 +1,4 @@
-import { ClassStorage, ClassDeclaration } from '../php/phpStructure';
+import { ClassStorage, ClassDescription} from './structure';
 import { parseEval } from '../php/parser';
 import * as services from '../services/service'
 import { Position, CompletionItem, CompletionItemKind } from 'vscode-languageserver';
@@ -64,7 +64,7 @@ function getClassServiceMethods(services: Services, classStorage: ClassStorage, 
     return suggest;
 }
 
-function findService(classStorage: ClassStorage, classDeclaration: ClassDeclaration, currentWord, node, parent) {
+function findService(classStorage: ClassStorage, classDeclaration: ClassDescription, currentWord, node, parent) {
     if (node.kind == 'propertylookup') {
         if (node.what.kind == 'call') {
             if (node.what.what.kind == 'propertylookup') {
@@ -95,7 +95,7 @@ function findService(classStorage: ClassStorage, classDeclaration: ClassDeclarat
     }
     return false;
 }
-function isServiceConditions(classStorage: ClassStorage, classDeclaration: ClassDeclaration, position: Position, currentWord, node, parent) {
+function isServiceConditions(classStorage: ClassStorage, classDeclaration: ClassDescription, position: Position, currentWord, node, parent) {
     if (node.kind == 'new' && node.what &&
         conteinerCompletionType(classDeclaration.getFQNFromName(node.what.name)) &&
         node.arguments.length > 0) {
@@ -149,7 +149,7 @@ function isServiceConditions(classStorage: ClassStorage, classDeclaration: Class
     return false;
 }
 
-function isParameterConditions(classStorage: ClassStorage, classDeclaration: ClassDeclaration, position: Position, currentWord, node, parent) {
+function isParameterConditions(classStorage: ClassStorage, classDeclaration: ClassDescription, position: Position, currentWord, node, parent) {
     if (node.kind == 'propertylookup') {
         if (node.what.kind == 'variable') {
             let func = classDeclaration.findMethodByLine(position.line);
